@@ -136,7 +136,7 @@ export default function Home() {
                       <LocationCard 
                         key={location.id}
                         location={location}
-                        isSelected={selectedLocation?.id === location.id}
+                        isSelected={false}
                         onClick={() => setSelectedLocation(location)}
                       />
                     ))}
