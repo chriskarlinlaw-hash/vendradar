@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendRadar Technical Implementation Roadmap</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;line-height:1.6;color:#1a1a2e;background:#ffffff;margin:0;padding:20px;max-width:800px;margin:0 auto}
+h1{font-size:2.5em;margin-bottom:0.2em;color:#1a1a2e}
+h2{font-size:1.8em;margin-top:1.5em;color:#0066cc;border-bottom:3px solid #0066cc;padding-bottom:0.3em}
+h3{font-size:1.3em;margin-top:1.2em;color:#1a1a2e}
+h4{font-size:1.1em;margin-top:1em;color:#333;font-weight:600}
+.subtitle{font-size:1.1em;color:#666;margin-bottom:2em}
+.status{display:inline-block;padding:4px 12px;border-radius:12px;font-size:0.85em;font-weight:600;margin-right:8px}
+.status.approved{background:#d1fae5;color:#065f46}
+.status.ready{background:#dbeafe;color:#1e40af}
+.status.blocked{background:#fee2e2;color:#991b1b}
+.phase{background:#f8f9fa;border-left:4px solid #0066cc;padding:20px;margin:20px 0;border-radius:4px}
+.phase h3{margin-top:0;color:#0066cc}
+.metric{background:#eff6ff;padding:15px;margin:10px 0;border-radius:6px;border-left:3px solid #0066cc}
+.warning{background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;margin:15px 0;border-radius:4px}
+.success{background:#d1fae5;border-left:4px solid #10b981;padding:15px;margin:15px 0;border-radius:4px}
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:0.95em}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #e5e7eb}
+th{background:#f3f4f6;font-weight:600;color:#1a1a2e}
+tr:hover{background:#f9fafb}
+code{background:#f3f4f6;padding:2px 6px;border-radius:3px;font-family:'Courier New',monospace;font-size:0.9em;color:#dc2626}
+pre{background:#1a1a2e;color:#e5e7eb;padding:15px;border-radius:6px;overflow-x:auto;font-size:0.9em}
+.timeline{position:relative;padding-left:30px;margin:20px 0}
+.timeline-item{position:relative;padding-bottom:20px}
+.timeline-item::before{content:'';position:absolute;left:-30px;top:0;width:12px;height:12px;border-radius:50%;background:#0066cc;border:3px solid #fff;box-shadow:0 0 0 2px #0066cc}
+.timeline-item::after{content:'';position:absolute;left:-25px;top:12px;width:2px;height:calc(100% - 12px);background:#cbd5e1}
+.timeline-item:last-child::after{display:none}
+.cost-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0}
+.cost-card{background:#f9fafb;padding:15px;border-radius:6px;border:1px solid #e5e7eb}
+.cost-card h4{margin:0 0 10px 0;color:#0066cc}
+.cost-value{font-size:1.5em;font-weight:bold;color:#1a1a2e}
+.api-card{background:#fff;border:2px solid #e5e7eb;padding:20px;margin:15px 0;border-radius:8px}
+.api-card h4{margin-top:0;color:#0066cc}
+.api-status{float:right;font-size:0.85em}
+ul{padding-left:20px}
+li{margin:8px 0}
+a{color:#0066cc;text-decoration:none}
+a:hover{text-decoration:underline}
+@media(max-width:600px){body{padding:15px}.cost-breakdown{grid-template-columns:1fr}h1{font-size:2em}h2{font-size:1.5em}}
+</style>
+</head>
+<body>
+
+<h1>VendRadar Technical Implementation Roadmap</h1>
+<p class="subtitle">From Approved Mockup to Production-Ready SaaS Platform</p>
+
+<div class="success">
+<strong>Status Update:</strong> MVP mockup (demo.html) approved by Chris on Feb 17, 2026. Market validated (A- grade), competitive analysis complete ($11.4M TAM, zero direct competitors). Ready to proceed with technical implementation.
+</div>
+
+<h2>Executive Summary</h2>
+
+<p>This document outlines the technical implementation strategy for VendRadar, bridging the gap between the approved HTML mockup and a production-ready SaaS platform. The roadmap is structured in three phases, each delivering incremental value while managing cost and technical risk.</p>
+
+<div class="metric">
+<strong>Target Timeline:</strong> MVP launch in 7 days (Feb 24), revenue-positive by Week 4, break-even by Month 2<br>
+<strong>Initial Investment:</strong> $0-50 infrastructure (free tiers), scale spending as revenue grows<br>
+<strong>Revenue Model:</strong> Free tier → $29/mo Basic → $79/mo Pro (AI recommendations)
+</div>
+
+<h2>Current State Analysis</h2>
+
+<h3>Existing Assets</h3>
+
+<table>
+<tr>
+<th>Asset</th>
+<th>Status</th>
+<th>Quality</th>
+<th>Next Step</th>
+</tr>
+<tr>
+<td><strong>demo.html</strong></td>
+<td><span class="status approved">Approved</span></td>
+<td>Production-ready UI/UX</td>
+<td>Convert to Next.js components</td>
+</tr>
+<tr>
+<td><strong>PROJECT-BRIEF.md</strong></td>
+<td><span class="status approved">Complete</span></td>
+<td>Comprehensive spec</td>
+<td>Reference for features</td>
+</tr>
+<tr>
+<td><strong>Market Validation</strong></td>
+<td><span class="status approved">A- Grade</span></td>
+<td>r/vending research validated</td>
+<td>Use for messaging/positioning</td>
+</tr>
+<tr>
+<td><strong>Competitive Analysis</strong></td>
+<td><span class="status approved">Complete</span></td>
+<td>Zero direct competitors</td>
+<td>Inform differentiation strategy</td>
+</tr>
+<tr>
+<td><strong>Feature Backlog</strong></td>
+<td><span class="status ready">Documented</span></td>
+<td>Future revenue streams mapped</td>
+<td>Prioritize post-PMF</td>
+</tr>
+</table>
+
+<h3>Technical Gaps to Address</h3>
+
+<ul>
+<li><strong>Backend Infrastructure:</strong> No server-side logic or database yet</li>
+<li><strong>Authentication:</strong> No user accounts (needed for paid tiers)</li>
+<li><strong>API Integration:</strong> Mock data in demo, need real data sources</li>
+<li><strong>Payment Processing:</strong> No Stripe integration for subscriptions</li>
+<li><strong>Analytics:</strong> No usage tracking or metrics pipeline</li>
+<li><strong>Deployment:</strong> Local demo only, need production hosting</li>
+</ul>
+
+<h2>Three-Phase Implementation Strategy</h2>
+
+<div class="phase">
+<h3>Phase 1: MVP Launch (Week 1 — Feb 17-24)</h3>
+<p><strong>Goal:</strong> Ship functional product with free data sources, validate demand, get first beta users</p>
+
+<h4>Core Features</h4>
+<ul>
+<li><strong>Map Interface:</strong> Google Maps JavaScript API (free tier: 28k loads/mo)</li>
+<li><strong>Address Search:</strong> Google Geocoding API</li>
+<li><strong>Category Filters:</strong> 8 verticals (office, gym, hospital, school, manufacturing, apartment, hotel, transit)</li>
+<li><strong>Location Scoring:</strong> Algorithm using free data sources (see below)</li>
+<li><strong>Demographics Overlay:</strong> US Census Bureau API (free, no key required)</li>
+<li><strong>POI Detection:</strong> Google Places API Nearby Search</li>
+<li><strong>PDF Export:</strong> Client-side generation (react-to-pdf)</li>
+<li><strong>Responsive Design:</strong> Mobile-first, 600px max-width</li>
+</ul>
+
+<h4>Tech Stack</h4>
+<ul>
+<li><strong>Frontend:</strong> Next.js 14 (App Router) + React 18 + Tailwind CSS</li>
+<li><strong>Backend:</strong> Vercel serverless functions (free tier: 100GB-hours/mo)</li>
+<li><strong>Database:</strong> Supabase PostgreSQL (free tier: 500MB, 2 concurrent connections)</li>
+<li><strong>Hosting:</strong> Vercel (free for non-commercial, $20/mo Pro when revenue starts)</li>
+<li><strong>Auth:</strong> Deferred to Phase 2 (launch publicly, track with analytics only)</li>
+</ul>
+
+<h4>Free Data Sources (Phase 1)</h4>
+
+<div class="api-card">
+<h4>US Census Bureau API <span class="api-status status approved">Free Forever</span></h4>
+<p><strong>What we get:</strong> Median income, population density, age distribution, employment stats by census tract</p>
+<p><strong>Endpoint:</strong> <code>https://api.census.gov/data/2021/acs/acs5</code></p>
+<p><strong>Rate Limits:</strong> None (government API, public data)</p>
+<p><strong>Implementation:</strong> Convert lat/lng → census tract FIPS code → query demographics</p>
+<pre>// Example query
+GET https://api.census.gov/data/2021/acs/acs5?get=NAME,B19013_001E,B01003_001E&for=tract:*&in=state:06+county:073
+
+// Returns: Median income (B19013_001E), Population (B01003_001E)</pre>
+</div>
+
+<div class="api-card">
+<h4>Google Maps Platform <span class="api-status status ready">Free Tier</span></h4>
+<p><strong>What we get:</strong> Map display, geocoding, nearby POIs, business details</p>
+<p><strong>Free Tier Limits:</strong></p>
+<ul>
+<li>Maps JavaScript API: 28,000 loads/mo ($7/1000 thereafter)</li>
+<li>Geocoding API: $5/1000 requests (first $200/mo free with billing enabled)</li>
+<li>Places API Nearby Search: $32/1000 requests (first $200/mo free)</li>
+</ul>
+<p><strong>Estimated Usage (100 active users, 10 searches each):</strong></p>
+<ul>
+<li>Map loads: ~1,000/mo (3.5% of free tier)</li>
+<li>Geocoding: ~1,000/mo ($5 value, covered by free credits)</li>
+<li>Places searches: ~1,000/mo ($32 value, covered by free credits)</li>
+</ul>
+<p><strong>Cost at 100 users:</strong> $0/mo (within free tier)</p>
+<p><strong>Cost at 1,000 users:</strong> ~$50/mo (scales with usage)</p>
+</div>
+
+<div class="api-card">
+<h4>Google Places API (POI Data) <span class="api-status status ready">Free Credits</span></h4>
+<p><strong>Usage:</strong> Detect nearby businesses (gyms, offices, hospitals) as foot traffic proxy</p>
+<p><strong>Strategy:</strong> Use <code>type</code> filters (e.g., <code>type=gym</code>) to match categories</p>
+<p><strong>Limitation:</strong> No real foot traffic data, just POI count as proxy</p>
+<p><strong>Upgrade Path:</strong> Switch to Foursquare API (Phase 2) for actual traffic estimates</p>
+</div>
+
+<h4>Deliverables (End of Week 1)</h4>
+<ul>
+<li>✅ Live demo at <code>vendradar.vercel.app</code></li>
+<li>✅ GitHub repo with full source code</li>
+<li>✅ 2-3 minute demo video (Loom) showing all features</li>
+<li>✅ Beta launch post drafted for r/vending</li>
+<li>✅ Analytics dashboard (Vercel Analytics + custom events)</li>
+</ul>
+
+<h4>Success Metrics (Week 1)</h4>
+<ul>
+<li>50+ beta signups from r/vending post</li>
+<li>10+ active users (performed 3+ searches)</li>
+<li>3+ testimonials ("This would've saved me X hours")</li>
+<li>Infrastructure cost: $0 (within free tiers)</li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>Phase 2: Monetization (Week 2-4 — Feb 25 - Mar 14)</h3>
+<p><strong>Goal:</strong> Add authentication, implement paid tiers, get first 20 paying customers</p>
+
+<h4>Core Features</h4>
+<ul>
+<li><strong>User Authentication:</strong> Clerk (free tier: 10k users) or Supabase Auth</li>
+<li><strong>Subscription Management:</strong> Stripe Checkout + Customer Portal</li>
+<li><strong>Usage Tracking:</strong> Track searches per user, enforce tier limits</li>
+<li><strong>Contact Reveal:</strong> Apollo.io API integration ($5-10 per reveal)</li>
+<li><strong>AI Recommendations:</strong> Pro tier feature (batch analysis)</li>
+<li><strong>PDF Branding:</strong> VendRadar logo + "Upgrade to remove watermark"</li>
+</ul>
+
+<h4>Pricing Implementation</h4>
+
+<table>
+<tr>
+<th>Tier</th>
+<th>Price</th>
+<th>Features</th>
+<th>Technical Implementation</th>
+</tr>
+<tr>
+<td><strong>Free</strong></td>
+<td>$0</td>
+<td>5 searches/mo, basic data, watermarked PDFs</td>
+<td>Rate limit via DB counter, show upgrade CTA</td>
+</tr>
+<tr>
+<td><strong>Basic</strong></td>
+<td>$29/mo</td>
+<td>Unlimited searches, full data, clean PDFs</td>
+<td>Stripe subscription, remove watermarks</td>
+</tr>
+<tr>
+<td><strong>Pro</strong></td>
+<td>$79/mo</td>
+<td>Basic + AI recommendations, contact reveal (5 free), batch analysis</td>
+<td>Feature flags in DB, OpenAI API for reasoning</td>
+</tr>
+</table>
+
+<h4>Payment Flow</h4>
+<ol>
+<li>User hits search limit or clicks "Upgrade"</li>
+<li>Redirect to Stripe Checkout (pre-built hosted page)</li>
+<li>On success, webhook updates user's <code>subscription_tier</code> in DB</li>
+<li>Feature access controlled by tier check middleware</li>
+</ol>
+
+<h4>Contact Reveal Integration</h4>
+
+<div class="api-card">
+<h4>Apollo.io API <span class="api-status status ready">Pay Per Use</span></h4>
+<p><strong>What we get:</strong> Business contact data (name, email, phone, LinkedIn)</p>
+<p><strong>Pricing:</strong> Starting at $49/mo for 500 credits (10¢ per contact)</p>
+<p><strong>Our Pricing:</strong> Charge $7/reveal (7x markup), Pro tier gets 5 free/mo</p>
+<p><strong>Revenue Impact:</strong> If 50% of users use 10 reveals/mo = $3,500 additional MRR</p>
+<p><strong>Implementation:</strong></p>
+<pre>// Server-side API route
+POST /api/reveal-contact
+{
+  "address": "123 Main St, San Francisco, CA",
+  "business_name": "Downtown Fitness"
+}
+
+// Return enriched contact data
+{
+  "name": "Jane Smith",
+  "title": "General Manager", 
+  "email": "jane.smith@dtfitness.com",
+  "phone": "+1-415-555-0100",
+  "linkedin": "linkedin.com/in/janesmith"
+}</pre>
+</div>
+
+<h4>Deliverables (End of Week 4)</h4>
+<ul>
+<li>✅ User authentication working (signup, login, logout)</li>
+<li>✅ Stripe payment integration (test mode → production)</li>
+<li>✅ 20 paying customers ($1,000 MRR minimum)</li>
+<li>✅ Contact reveal feature live (Pro tier)</li>
+<li>✅ Admin dashboard for tracking MRR, churn, usage</li>
+</ul>
+
+<h4>Success Metrics (Week 4)</h4>
+<ul>
+<li>20+ paying customers ($1,000+ MRR)</li>
+<li>15% free → paid conversion rate</li>
+<li>&lt;5% monthly churn</li>
+<li>10+ contact reveals purchased</li>
+<li>Infrastructure cost: &lt;$100/mo</li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>Phase 3: Scale & Enhance (Month 2-3 — Mar 15 - Apr 30)</h3>
+<p><strong>Goal:</strong> Reach 100 paying customers, add paid APIs for accuracy, build moat features</p>
+
+<h4>Paid API Integration (Revenue-Justified)</h4>
+
+<div class="warning">
+<strong>⚠️ Important:</strong> Only add paid APIs after crossing 30 paying customers (~$2,000 MRR). This ensures revenue covers API costs before committing to monthly fees.
+</div>
+
+<div class="api-card">
+<h4>Foursquare Places API <span class="api-status status blocked">Wait for Revenue</span></h4>
+<p><strong>What we get:</strong> Real foot traffic data (hourly patterns, visit counts, visitor demographics)</p>
+<p><strong>Pricing:</strong> ~$200/mo for 10k requests/mo (Personal tier)</p>
+<p><strong>When to add:</strong> After reaching 30 paying customers ($2,000+ MRR)</p>
+<p><strong>Impact:</strong> Scoring accuracy improves dramatically, justifies Pro tier pricing</p>
+<p><strong>ROI:</strong> $200 cost for $6,000 MRR = 3.3% of revenue (acceptable)</p>
+</div>
+
+<div class="api-card">
+<h4>SafeGraph Core Places <span class="api-status status blocked">Wait for Revenue</span></h4>
+<p><strong>What we get:</strong> Detailed POI data (business polygons, precise categories, opening dates)</p>
+<p><strong>Pricing:</strong> ~$100/mo for core dataset</p>
+<p><strong>When to add:</strong> After reaching 50 paying customers ($3,000+ MRR)</p>
+<p><strong>Impact:</strong> Better competition mapping, category matching</p>
+</div>
+
+<h4>AI Recommendations Feature</h4>
+<p>Pro tier killer feature: "Find the 10 best gym locations in San Diego"</p>
+
+<p><strong>Technical Approach:</strong></p>
+<ol>
+<li>User inputs: city/area + category (gym) + radius</li>
+<li>Backend generates grid of lat/lng points (every 0.1 miles)</li>
+<li>Score each point using existing algorithm (parallelized)</li>
+<li>Sort by score, return top 10-20 with reasoning</li>
+<li>OpenAI GPT-4 generates reasoning per location</li>
+</ol>
+
+<p><strong>Cost Estimation:</strong></p>
+<ul>
+<li>Grid scan of 10-mile radius = ~300 points to score</li>
+<li>300 Census API calls: free</li>
+<li>300 Places API calls: ~$10 (within free credits at low volume)</li>
+<li>1 OpenAI API call (batch reasoning): ~$0.05</li>
+<li><strong>Total per recommendation:</strong> ~$0.10-0.20</li>
+</ul>
+
+<p><strong>Margin Analysis:</strong> $79/mo Pro tier → ~10 recommendations/mo = $0.10 × 10 = $1-2 cost → 97% gross margin maintained</p>
+
+<h4>Competition Mapping (User-Contributed Data)</h4>
+<p>Build network effects moat:</p>
+<ul>
+<li>Operators can flag competitor machines on map</li>
+<li>Optional: share performance data (anonymous, aggregated)</li>
+<li>Gamification: badges for contributing data</li>
+<li>More users = better competition intel = better recommendations</li>
+</ul>
+
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Add "Flag Competitor" button on map</li>
+<li>Store in <code>competitor_machines</code> table (lat, lng, category, user_id, date_added)</li>
+<li>Display on map as red markers</li>
+<li>Factor into scoring: penalize locations near flagged competitors</li>
+</ul>
+
+<h4>Deliverables (End of Month 3)</h4>
+<ul>
+<li>✅ 100 paying customers ($7,000+ MRR)</li>
+<li>✅ Foursquare API integrated (real foot traffic data)</li>
+<li>✅ AI recommendations feature live (Pro tier)</li>
+<li>✅ Competition mapping with user contributions</li>
+<li>✅ Mobile-optimized interface (PWA)</li>
+<li>✅ Analytics dashboard showing operator success stories</li>
+</ul>
+
+<h4>Success Metrics (Month 3)</h4>
+<ul>
+<li>100+ paying customers ($7,000+ MRR)</li>
+<li>20%+ free → paid conversion rate</li>
+<li>&lt;5% monthly churn</li>
+<li>50+ AI recommendations generated</li>
+<li>200+ competitor machines flagged (network effects)</li>
+<li>Infrastructure cost: ~$400/mo (5.7% of revenue)</li>
+<li><strong>Profitability:</strong> Revenue ($7k) - Costs ($400) = $6,600 profit/mo</li>
+</ul>
+</div>
+
+<h2>Technical Architecture</h2>
+
+<h3>System Diagram</h3>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENT (Browser)                         │
+│  Next.js App (React Components + Tailwind CSS)                  │
+│  - Map interface (Google Maps JS API)                           │
+│  - Search bar (autocomplete)                                     │
+│  - Category filters                                              │
+│  - Results panel                                                 │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ HTTPS
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    VERCEL EDGE NETWORK                           │
+│  - CDN for static assets                                         │
+│  - Serverless functions (API routes)                             │
+│  - Environment variables (secrets)                               │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+  ┌──────────┐   ┌──────────────┐  ┌──────────────┐
+  │ Supabase │   │ Google APIs  │  │  Stripe      │
+  │ Postgres │   │ - Maps       │  │  Payments    │
+  │          │   │ - Places     │  │              │
+  │ - Users  │   │ - Geocoding  │  │              │
+  │ - Subs   │   └──────────────┘  └──────────────┘
+  │ - Searches│           ▲
+  │ - Comps  │           │ Phase 2+
+  └──────────┘   ┌──────────────────┐  ┌──────────────┐
+                 │  Foursquare API  │  │  Apollo.io   │
+                 │  Foot Traffic    │  │  Contact Data│
+                 └──────────────────┘  └──────────────┘
+</pre>
+
+<h3>Database Schema (Supabase PostgreSQL)</h3>
+
+<pre>
+-- Users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  subscription_tier VARCHAR(20) DEFAULT 'free',
+  stripe_customer_id VARCHAR(100),
+  searches_this_month INT DEFAULT 0,
+  contact_reveals_remaining INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Searches table (analytics + rate limiting)
+CREATE TABLE searches (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id),
+  address TEXT,
+  category VARCHAR(50),
+  score INT,
+  lat DECIMAL(10,8),
+  lng DECIMAL(11,8),
+  searched_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Competitor machines (user-contributed)
+CREATE TABLE competitor_machines (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  reported_by UUID REFERENCES users(id),
+  lat DECIMAL(10,8),
+  lng DECIMAL(11,8),
+  category VARCHAR(50),
+  notes TEXT,
+  verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Subscriptions table
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id),
+  stripe_subscription_id VARCHAR(100) UNIQUE,
+  status VARCHAR(20),
+  tier VARCHAR(20),
+  current_period_start TIMESTAMP,
+  current_period_end TIMESTAMP,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+</pre>
+
+<h3>Scoring Algorithm (Proprietary)</h3>
+
+<p>Location score calculated from 4 components (0-100 total):</p>
+
+<pre>
+function calculateLocationScore(location, category, data) {
+  // 1. Foot Traffic (30 points)
+  const poiCount = countNearbyPOIs(location, 0.5); // within 0.5mi
+  const transitProximity = getTransitDistance(location);
+  const footTrafficScore = Math.min(30, 
+    (poiCount / 20) * 20 + // POI density
+    (1 / transitProximity) * 10 // Transit access
+  );
+
+  // 2. Demographics (25 points)
+  const incomeScore = normalizeIncome(data.medianIncome, category);
+  const populationDensity = data.population / data.areaKm2;
+  const demographicsScore = Math.min(25,
+    incomeScore * 0.6 + 
+    (populationDensity / 10000) * 10
+  );
+
+  // 3. Competition (25 points)
+  const nearestCompetitor = findNearestCompetitor(location, category);
+  const competitionScore = Math.min(25,
+    (nearestCompetitor.distanceMiles / 2) * 25
+  );
+
+  // 4. Building Type Fit (20 points)
+  const buildingFit = calculateBuildingFit(location, category, data.pois);
+  
+  // Category-specific weight adjustments
+  const weights = getCategoryWeights(category);
+  
+  return Math.round(
+    footTrafficScore * weights.traffic +
+    demographicsScore * weights.demographics +
+    competitionScore * weights.competition +
+    buildingFit * weights.building
+  );
+}
+
+// Category-specific weight adjustments
+function getCategoryWeights(category) {
+  const weights = {
+    'gym': { traffic: 1.1, demographics: 1.2, competition: 0.9, building: 0.8 },
+    'office': { traffic: 1.0, demographics: 1.0, competition: 1.0, building: 1.3 },
+    'hospital': { traffic: 1.3, demographics: 0.8, competition: 0.9, building: 1.1 },
+    // ... etc for all 8 categories
+  };
+  return weights[category] || { traffic: 1, demographics: 1, competition: 1, building: 1 };
+}
+</pre>
+
+<h2>Cost Management & Monitoring</h2>
+
+<h3>Infrastructure Costs (Projected)</h3>
+
+<div class="cost-breakdown">
+<div class="cost-card">
+<h4>Phase 1 (Week 1-4)</h4>
+<p><strong>Expected Users:</strong> 100 total, 20 active</p>
+<div class="cost-value">$0-20/mo</div>
+<ul style="font-size:0.9em;margin-top:10px">
+<li>Vercel: $0 (free tier)</li>
+<li>Supabase: $0 (free tier)</li>
+<li>Google Maps: $0 (within free credits)</li>
+<li>Domain: $12/yr (~$1/mo)</li>
+</ul>
+</div>
+
+<div class="cost-card">
+<h4>Phase 2 (Month 2)</h4>
+<p><strong>Expected Users:</strong> 500 total, 50 paying</p>
+<div class="cost-value">$100-150/mo</div>
+<ul style="font-size:0.9em;margin-top:10px">
+<li>Vercel Pro: $20/mo</li>
+<li>Supabase: $0 (still within free)</li>
+<li>Google Maps: $50/mo (5k searches)</li>
+<li>Clerk Auth: $0 (free tier)</li>
+<li>Apollo.io: $49/mo (500 credits)</li>
+</ul>
+</div>
+
+<div class="cost-card">
+<h4>Phase 3 (Month 3+)</h4>
+<p><strong>Expected Users:</strong> 2,000 total, 100 paying</p>
+<div class="cost-value">$400-500/mo</div>
+<ul style="font-size:0.9em;margin-top:10px">
+<li>Vercel Pro: $20/mo</li>
+<li>Supabase Pro: $25/mo</li>
+<li>Google Maps: $100/mo (10k searches)</li>
+<li>Foursquare: $200/mo</li>
+<li>SafeGraph: $100/mo</li>
+<li>Apollo.io: $99/mo (1k credits)</li>
+</ul>
+</div>
+
+<div class="cost-card">
+<h4>Revenue (Month 3)</h4>
+<p><strong>100 paying customers</strong></p>
+<div class="cost-value">$7,000/mo</div>
+<ul style="font-size:0.9em;margin-top:10px">
+<li>60 × $29 Basic = $1,740</li>
+<li>40 × $79 Pro = $3,160</li>
+<li>Contact reveals: $2,000</li>
+<li><strong>Gross Margin: 93%</strong></li>
+</ul>
+</div>
+</div>
+
+<h3>Cost Monitoring Strategy</h3>
+
+<ul>
+<li><strong>Set up billing alerts</strong> in Google Cloud Console (notify at $50, $100, $150)</li>
+<li><strong>Track API usage daily</strong> via custom dashboard (queries/day, cost/query)</li>
+<li><strong>Rate limiting:</strong> Enforce tier limits strictly (prevents abuse)</li>
+<li><strong>Cache aggressively:</strong> Census data by tract (rarely changes), Places results (24h TTL)</li>
+<li><strong>Review weekly:</strong> Cost-per-customer metric (target: &lt;$5/user/mo)</li>
+</ul>
+
+<h3>Scaling Thresholds</h3>
+
+<table>
+<tr>
+<th>Milestone</th>
+<th>Action</th>
+<th>Expected Cost Impact</th>
+</tr>
+<tr>
+<td>30 paying customers</td>
+<td>Add Foursquare API (real foot traffic)</td>
+<td>+$200/mo (10% of revenue)</td>
+</tr>
+<tr>
+<td>50 paying customers</td>
+<td>Add SafeGraph (better POI data)</td>
+<td>+$100/mo (6% of revenue)</td>
+</tr>
+<tr>
+<td>100 paying customers</td>
+<td>Upgrade Supabase to Pro (scale DB)</td>
+<td>+$25/mo (0.3% of revenue)</td>
+</tr>
+<tr>
+<td>200 paying customers</td>
+<td>Consider dedicated infrastructure</td>
+<td>Evaluate vs serverless cost</td>
+</tr>
+</table>
+
+<h2>Risk Assessment & Mitigation</h2>
+
+<h3>Technical Risks</h3>
+
+<div class="api-card">
+<h4>Risk: Google Maps API costs spiral out of control</h4>
+<p><strong>Likelihood:</strong> Medium | <strong>Impact:</strong> High</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Implement aggressive caching (24h for static data)</li>
+<li>Set hard billing caps in Google Cloud Console</li>
+<li>Rate limit free users more strictly</li>
+<li>Backup plan: Migrate to Mapbox (cheaper at scale)</li>
+</ul>
+</div>
+
+<div class="api-card">
+<h4>Risk: Free data sources provide inaccurate scores</h4>
+<p><strong>Likelihood:</strong> High | <strong>Impact:</strong> Medium</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Clearly label as "estimates based on public data"</li>
+<li>Gather user feedback on score accuracy</li>
+<li>Prioritize Foursquare integration (Phase 2)</li>
+<li>Build credibility with testimonials, not just data accuracy</li>
+</ul>
+</div>
+
+<div class="api-card">
+<h4>Risk: Supabase free tier limits hit sooner than expected</h4>
+<p><strong>Likelihood:</strong> Low | <strong>Impact:</strong> Low</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Monitor connection count daily</li>
+<li>Implement connection pooling</li>
+<li>Upgrade to Pro ($25/mo) if approaching limits</li>
+<li>Cost is only 0.3% of revenue at 100 customers</li>
+</ul>
+</div>
+
+<h3>Business Risks</h3>
+
+<div class="api-card">
+<h4>Risk: Operators don't trust AI recommendations</h4>
+<p><strong>Likelihood:</strong> Medium | <strong>Impact:</strong> High</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Show transparent reasoning for every score</li>
+<li>Start with manual lookup (builds trust before AI)</li>
+<li>Offer free validation: "Submit your current location, we'll score it"</li>
+<li>Collect testimonials from beta users</li>
+</ul>
+</div>
+
+<div class="api-card">
+<h4>Risk: Market too small or operators won't pay</h4>
+<p><strong>Likelihood:</strong> Low | <strong>Impact:</strong> Critical</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>Already validated demand via r/vending research (A- grade)</li>
+<li>Free tier proves value before asking for payment</li>
+<li>Clear ROI: one good location = 6-24 months of subscription</li>
+<li>Backup plan: expand to adjacent markets (ATMs, micro-markets)</li>
+</ul>
+</div>
+
+<div class="api-card">
+<h4>Risk: Competitor copies the idea</h4>
+<p><strong>Likelihood:</strong> Medium (6-12 months) | <strong>Impact:</strong> Medium</p>
+<p><strong>Mitigation:</strong></p>
+<ul>
+<li>First-mover advantage in blue ocean market</li>
+<li>Build network effects quickly (user-contributed competition data)</li>
+<li>Domain expertise moat (vending-specific scoring hard to replicate)</li>
+<li>Ship fast, iterate weekly, stay 6 months ahead</li>
+</ul>
+</div>
+
+<h2>Testing & Validation Plan</h2>
+
+<h3>Phase 1 Testing (Pre-Launch)</h3>
+
+<table>
+<tr>
+<th>Test Type</th>
+<th>What to Validate</th>
+<th>Success Criteria</th>
+</tr>
+<tr>
+<td><strong>Functional</strong></td>
+<td>All features work end-to-end</td>
+<td>Search → score → export PDF (no errors)</td>
+</tr>
+<tr>
+<td><strong>Accuracy</strong></td>
+<td>Scores make sense for known locations</td>
+<td>Office building scores &gt;70, random field scores &lt;40</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Page load and search response time</td>
+<td>&lt;3 sec initial load, &lt;2 sec per search</td>
+</tr>
+<tr>
+<td><strong>Mobile</strong></td>
+<td>Responsive design on iOS/Android</td>
+<td>All features usable on 375px width</td>
+</tr>
+<tr>
+<td><strong>Cross-Browser</strong></td>
+<td>Chrome, Safari, Firefox compatibility</td>
+<td>No JS errors, layout intact</td>
+</tr>
+</table>
+
+<h3>Beta Validation (Week 1-2)</h3>
+
+<p><strong>Qualitative Feedback Questions:</strong></p>
+<ul>
+<li>"How accurate does this score feel compared to your experience?"</li>
+<li>"Would you pay $29/mo for unlimited access? Why or why not?"</li>
+<li>"What's missing that would make this a must-have tool?"</li>
+<li>"How does this compare to your current scouting process?"</li>
+</ul>
+
+<p><strong>Quantitative Metrics to Track:</strong></p>
+<ul>
+<li>Searches per user (engagement)</li>
+<li>Return rate (did they come back?)</li>
+<li>Category filter usage (which verticals get attention)</li>
+<li>PDF exports (intent signal)</li>
+<li>Time to first search (onboarding friction)</li>
+</ul>
+
+<h3>A/B Testing Opportunities (Phase 2+)</h3>
+<ul>
+<li><strong>Pricing page:</strong> Test $29 vs $39 for Basic tier</li>
+<li><strong>Free tier limits:</strong> 3 vs 5 vs 10 searches/mo</li>
+<li><strong>CTA copy:</strong> "Start Free Trial" vs "Get Started" vs "Find Locations"</li>
+<li><strong>Upgrade prompts:</strong> Timing and messaging for conversion</li>
+</ul>
+
+<h2>Development Timeline</h2>
+
+<div class="timeline">
+<div class="timeline-item">
+<h4>Week 1: Feb 17-24 — MVP Build</h4>
+<ul>
+<li><strong>Day 1-2:</strong> Next.js setup, Google Maps integration, category filters</li>
+<li><strong>Day 3-4:</strong> Census API integration, scoring algorithm implementation</li>
+<li><strong>Day 5-6:</strong> Places API integration, results panel, PDF export</li>
+<li><strong>Day 7:</strong> Deploy to Vercel, beta launch on r/vending</li>
+</ul>
+<p><strong>Deliverable:</strong> Live demo at vendradar.vercel.app</p>
+</div>
+
+<div class="timeline-item">
+<h4>Week 2: Feb 25 - Mar 3 — Gather Feedback</h4>
+<ul>
+<li>Monitor beta user behavior (analytics dashboard)</li>
+<li>Conduct 10-15 user interviews</li>
+<li>Fix bugs and UX issues</li>
+<li>Iterate on scoring algorithm based on feedback</li>
+<li>Draft pricing page and subscription flow</li>
+</ul>
+<p><strong>Deliverable:</strong> Validated feature set, pricing confirmed</p>
+</div>
+
+<div class="timeline-item">
+<h4>Week 3-4: Mar 4-14 — Monetization</h4>
+<ul>
+<li><strong>Week 3:</strong> Add Clerk auth, Stripe integration, tier enforcement</li>
+<li><strong>Week 4:</strong> Contact reveal feature, AI recommendations (basic), launch paid tiers</li>
+</ul>
+<p><strong>Deliverable:</strong> First 20 paying customers</p>
+</div>
+
+<div class="timeline-item">
+<h4>Month 2: Mar 15 - Apr 15 — Scale to 50 Customers</h4>
+<ul>
+<li>Add Foursquare API (real foot traffic)</li>
+<li>Improve AI recommendations (OpenAI integration)</li>
+<li>Competition mapping feature</li>
+<li>Expand marketing (Facebook groups, industry forums)</li>
+</ul>
+<p><strong>Deliverable:</strong> 50 paying customers, $3,000 MRR</p>
+</div>
+
+<div class="timeline-item">
+<h4>Month 3: Apr 16 - May 15 — Scale to 100 Customers</h4>
+<ul>
+<li>Add SafeGraph API (better POI data)</li>
+<li>Mobile PWA optimization</li>
+<li>Admin dashboard for analytics</li>
+<li>Content marketing (case studies, guides)</li>
+<li>Marketplace feature (Phase 2 of feature backlog)</li>
+</ul>
+<p><strong>Deliverable:</strong> 100 paying customers, $7,000 MRR, profitable</p>
+</div>
+</div>
+
+<h2>Success Criteria & Decision Points</h2>
+
+<h3>Go/No-Go Gates</h3>
+
+<div class="metric">
+<h4>Gate 1: End of Week 1 (MVP Launch)</h4>
+<p><strong>Required to proceed:</strong></p>
+<ul>
+<li>✅ 50+ beta signups from r/vending</li>
+<li>✅ 10+ active users (3+ searches each)</li>
+<li>✅ No critical bugs preventing usage</li>
+<li>✅ At least 3 positive testimonials</li>
+</ul>
+<p><strong>Decision:</strong> If not met, extend beta by 1 week and improve messaging/UX</p>
+</div>
+
+<div class="metric">
+<h4>Gate 2: End of Week 4 (Monetization)</h4>
+<p><strong>Required to proceed:</strong></p>
+<ul>
+<li>✅ 15+ paying customers (minimum $750 MRR)</li>
+<li>✅ 10%+ conversion rate (free → paid)</li>
+<li>✅ &lt;10% churn in first month</li>
+<li>✅ Infrastructure costs &lt;20% of revenue</li>
+</ul>
+<p><strong>Decision:</strong> If not met, revisit pricing or feature set before scaling</p>
+</div>
+
+<div class="metric">
+<h4>Gate 3: End of Month 2 (Paid APIs)</h4>
+<p><strong>Required to add Foursquare:</strong></p>
+<ul>
+<li>✅ 30+ paying customers ($2,000+ MRR)</li>
+<li>✅ Positive unit economics (LTV &gt; 3× CAC)</li>
+<li>✅ Operators requesting more accurate data</li>
+</ul>
+<p><strong>Decision:</strong> If not met, defer paid APIs and focus on acquisition</p>
+</div>
+
+<h3>Product-Market Fit Signals</h3>
+
+<p>We'll know we have PMF when:</p>
+<ul>
+<li>✅ 20%+ free → paid conversion (vs industry avg ~5%)</li>
+<li>✅ &lt;5% monthly churn (sticky product)</li>
+<li>✅ Organic word-of-mouth: operators sharing in r/vending without prompting</li>
+<li>✅ Feature requests about power-user needs (not basic fixes)</li>
+<li>✅ "How did I do this before?" moments (indispensable tool)</li>
+<li>✅ Willingness to pay more: "Can I get X feature for $99/mo?"</li>
+</ul>
+
+<h2>Next Steps (Immediate Actions)</h2>
+
+<div class="phase">
+<h3>This Week (Feb 17-24)</h3>
+
+<h4>Development (2-3 hour sprint sessions)</h4>
+<ol>
+<li><strong>Monday-Tuesday:</strong> Next.js setup + Google Maps + category filters</li>
+<li><strong>Wednesday-Thursday:</strong> Census API + scoring algorithm + Places integration</li>
+<li><strong>Friday-Saturday:</strong> Results panel + PDF export + mobile responsive</li>
+<li><strong>Sunday:</strong> Deploy to Vercel + launch on r/vending</li>
+</ol>
+
+<h4>Marketing Prep</h4>
+<ul>
+<li>Draft r/vending beta post (benefit-focused, not feature-focused)</li>
+<li>Create 2-3 min demo video (Loom showing real use case)</li>
+<li>Set up analytics (Vercel Analytics + custom events)</li>
+<li>Prepare feedback collection form (Typeform or Google Form)</li>
+</ul>
+
+<h4>Administrative</h4>
+<ul>
+<li>Register domain: vendradar.com or getvendradar.com (~$12/yr)</li>
+<li>Set up Google Cloud project (enable billing for free credits)</li>
+<li>Create Vercel account + connect GitHub</li>
+<li>Set up Supabase project</li>
+</ul>
+</div>
+
+<h2>Appendix: API Integration Details</h2>
+
+<h3>Google Maps JavaScript API</h3>
+<pre>
+// Load map
+&lt;script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY&libraries=places"&gt;&lt;/script&gt;
+
+// Initialize
+const map = new google.maps.Map(document.getElementById("map"), {
+  center: { lat: 37.7749, lng: -122.4194 },
+  zoom: 12
+});
+
+// Add click listener for "analyze this location"
+map.addListener("click", (e) => {
+  analyzeLocation(e.latLng.lat(), e.latLng.lng());
+});
+</pre>
+
+<h3>Census API (Demographics)</h3>
+<pre>
+// Get census tract from lat/lng
+const tractResponse = await fetch(
+  `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${lng}&y=${lat}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`
+);
+
+// Extract FIPS codes
+const { state, county, tract } = tractResponse.result.geographies['Census Tracts'][0];
+
+// Fetch demographics
+const demoResponse = await fetch(
+  `https://api.census.gov/data/2021/acs/acs5?get=NAME,B19013_001E,B01003_001E,B01002_001E&for=tract:${tract}&in=state:${state}+county:${county}`
+);
+
+// Parse results
+const [header, data] = demoResponse.data;
+const demographics = {
+  medianIncome: parseInt(data[1]), // B19013_001E
+  population: parseInt(data[2]),    // B01003_001E
+  medianAge: parseFloat(data[3])    // B01002_001E
+};
+</pre>
+
+<h3>Google Places API (Nearby Search)</h3>
+<pre>
+// Server-side API route (Next.js)
+export async function POST(request) {
+  const { lat, lng, category } = await request.json();
+  
+  // Map category to Google Places type
+  const typeMap = {
+    'gym': 'gym',
+    'office': 'office',
+    'hospital': 'hospital',
+    'school': 'school'
+  };
+  
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=800&type=${typeMap[category]}&key=${process.env.GOOGLE_PLACES_API_KEY}`
+  );
+  
+  const data = await response.json();
+  
+  return NextResponse.json({
+    poiCount: data.results.length,
+    pois: data.results.map(p => ({
+      name: p.name,
+      type: p.types[0],
+      rating: p.rating
+    }))
+  });
+}
+</pre>
+
+<h2>Conclusion</h2>
+
+<p>VendRadar is positioned to capture a blue ocean market with zero direct competitors, validated demand, and clear ROI for customers. This implementation roadmap provides a structured path from approved mockup to profitable SaaS business in 90 days.</p>
+
+<div class="success">
+<h4>Key Advantages of This Approach:</h4>
+<ul>
+<li><strong>Low upfront investment:</strong> Start with $0-50/mo, scale spending as revenue grows</li>
+<li><strong>Fast validation:</strong> MVP live in 7 days, paying customers by Week 4</li>
+<li><strong>Progressive enhancement:</strong> Each phase delivers value while building toward full vision</li>
+<li><strong>Risk mitigation:</strong> Free data sources validate demand before committing to paid APIs</li>
+<li><strong>Clear decision points:</strong> Go/no-go gates prevent over-investment in unproven features</li>
+</ul>
+</div>
+
+<p><strong>Next Action:</strong> Begin Phase 1 development sprint (MVP build). Target launch date: February 24, 2026.</p>
+
+<hr>
+
+<p style="text-align:center;color:#666;font-size:0.9em">
+<strong>Document:</strong> VendRadar Technical Implementation Roadmap v1.0<br>
+<strong>Created:</strong> February 17, 2026<br>
+<strong>Author:</strong> Pax (AI Operator)<br>
+<strong>Status:</strong> Ready for Development<br>
+<strong>Next Review:</strong> After Phase 1 completion (Week 1)
+</p>
+
+</body>
+</html>

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendRadar Go-To-Market Plan</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #1a1a2e;
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #0066cc;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 30px;
+            border-left: 4px solid #0066cc;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #1a1a2e;
+            margin-top: 20px;
+        }
+        .meta {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .channel {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #0066cc;
+        }
+        .priority-high {
+            border-left-color: #28a745;
+        }
+        .priority-medium {
+            border-left-color: #ffc107;
+        }
+        .priority-low {
+            border-left-color: #6c757d;
+        }
+        .metric {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .timeline-week {
+            background: #fff;
+            border: 2px solid #0066cc;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+        .timeline-week h4 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #0066cc;
+            color: white;
+        }
+        .cost-free {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .cost-low {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        ul {
+            margin: 10px 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .emphasis {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .action-item {
+            background: #d4edda;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 3px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 VendRadar Go-To-Market Plan</h1>
+        
+        <div class="meta">
+            <strong>Product:</strong> VendRadar — Foot traffic analytics for vending machine site selection<br>
+            <strong>Launch Date:</strong> February 24, 2026<br>
+            <strong>Goal:</strong> 50 beta users → 100 paying customers<br>
+            <strong>Strategy:</strong> Organic, low-cost, community-first
+        </div>
+
+        <h2>1. Target Audience Analysis</h2>
+        
+        <h3>Primary Segments</h3>
+        
+        <div class="channel">
+            <strong>🎯 Aspiring Vending Entrepreneurs (40% of target)</strong>
+            <ul>
+                <li><strong>Profile:</strong> Side hustlers, digital nomads, passive income seekers</li>
+                <li><strong>Pain:</strong> Fear of picking wrong locations, wasting money on bad spots</li>
+                <li><strong>Where they are:</strong> r/sweatystartup, r/entrepreneurship, YouTube business channels</li>
+                <li><strong>Message angle:</strong> "Don't guess where to place your machines — know for certain"</li>
+                <li><strong>Trigger:</strong> Just bought first machine or researching vending as business model</li>
+            </ul>
+        </div>
+
+        <div class="channel">
+            <strong>🎯 Active Vending Operators (35% of target)</strong>
+            <ul>
+                <li><strong>Profile:</strong> 1-10 machines, managing routes manually, looking to expand</li>
+                <li><strong>Pain:</strong> Underperforming machines, gut-feel location decisions, time wasted scouting</li>
+                <li><strong>Where they are:</strong> r/vending, Facebook groups (Vending Nation, Vending Machine Operators), industry forums</li>
+                <li><strong>Message angle:</strong> "Increase profit per machine by 30% with data-driven placement"</li>
+                <li><strong>Trigger:</strong> Machine underperforming, considering new location, route optimization</li>
+            </ul>
+        </div>
+
+        <div class="channel">
+            <strong>🎯 Route Owners & Small Operators (25% of target)</strong>
+            <ul>
+                <li><strong>Profile:</strong> 10+ machines, small team or solo, semi-professional</li>
+                <li><strong>Pain:</strong> Scaling profitably, competitive location analysis, contract negotiations</li>
+                <li><strong>Where they are:</strong> LinkedIn, industry associations (NAMA), trade publications</li>
+                <li><strong>Message angle:</strong> "Scale your route 2x without the guesswork"</li>
+                <li><strong>Trigger:</strong> Bidding on new locations, competitor analysis, investor pitch prep</li>
+            </ul>
+        </div>
+
+        <h3>Psychographic Profile</h3>
+        <ul>
+            <li><strong>Values:</strong> ROI, proof over promises, practical over flashy</li>
+            <li><strong>Skepticism:</strong> High — burned by "guru" courses and empty promises</li>
+            <li><strong>Decision style:</strong> Data-driven, wants case studies and numbers</li>
+            <li><strong>Tech comfort:</strong> Moderate (uses spreadsheets, mobile apps, but not complex software)</li>
+            <li><strong>Viral trigger:</strong> Concrete ROI stories ("I increased revenue 40% in 3 months")</li>
+        </ul>
+
+        <h2>2. Channel Strategy (Ranked by Priority)</h2>
+
+        <div class="channel priority-high">
+            <h3>🥇 Priority 1: Reddit (r/vending, r/sweatystartup, r/entrepreneur)</h3>
+            <p><strong>Effort:</strong> Low | <strong>Impact:</strong> High | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #1:</strong></p>
+            <ul>
+                <li>Vending operators actively ask for advice here daily</li>
+                <li>High trust environment (authentic voices win)</li>
+                <li>Direct access to exact target audience</li>
+                <li>Viral potential through upvotes and cross-posts</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>Launch post (see reddit-launch-post.md)</li>
+                <li>Answer location-related questions authentically (link to tool when relevant)</li>
+                <li>Weekly "data drop" posts: "We analyzed 500 vending locations — here's what we found"</li>
+                <li>AMA (Ask Me Anything) after first 25 users</li>
+            </ul>
+            <p><strong>KPIs:</strong> 20+ beta signups from Reddit, 500+ upvotes on launch post</p>
+        </div>
+
+        <div class="channel priority-high">
+            <h3>🥇 Priority 2: Facebook Groups (Vending Nation, Vending Machine Operators)</h3>
+            <p><strong>Effort:</strong> Low | <strong>Impact:</strong> High | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #2:</strong></p>
+            <ul>
+                <li>10,000+ active vending operators in top groups</li>
+                <li>High engagement (people post machine photos, profit screenshots)</li>
+                <li>Older demographic (30-55) with purchasing power</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>Join 5-7 active groups this week (participate before posting)</li>
+                <li>Launch post adaptation (more conversational, less "startup-y")</li>
+                <li>Engage on every "where should I place my machine?" post</li>
+                <li>Share free heat maps (lead magnet for email capture)</li>
+            </ul>
+            <p><strong>KPIs:</strong> 15+ beta signups, 50+ waitlist emails</p>
+        </div>
+
+        <div class="channel priority-high">
+            <h3>🥇 Priority 3: YouTube (Product Demo + Educational Content)</h3>
+            <p><strong>Effort:</strong> Medium | <strong>Impact:</strong> High | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #3:</strong></p>
+            <ul>
+                <li>Vending operators watch "how to" and "business tips" videos constantly</li>
+                <li>Long shelf life (videos get views for years)</li>
+                <li>Builds trust (they can see the product working)</li>
+                <li>SEO goldmine ("vending machine location finder", "best vending locations")</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>3-minute product demo (see demo-script.md)</li>
+                <li>"How to Pick Profitable Vending Locations (Data-Driven Method)" — educational, soft pitch</li>
+                <li>"I Analyzed 100 Vending Machine Locations — Here's What Works"</li>
+                <li>Short-form: Repurpose as YouTube Shorts, TikTok, Instagram Reels</li>
+            </ul>
+            <p><strong>KPIs:</strong> 1,000 views on demo video by launch day, 10+ signups from YouTube</p>
+        </div>
+
+        <div class="channel priority-medium">
+            <h3>🥈 Priority 4: TikTok / Instagram Reels</h3>
+            <p><strong>Effort:</strong> Medium | <strong>Impact:</strong> Medium | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #4:</strong></p>
+            <ul>
+                <li>Growing "side hustle" audience (18-35 demographic)</li>
+                <li>Viral potential (one hit video = 10,000+ views)</li>
+                <li>Younger aspiring operators research here first</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>Hook-heavy short videos (see social-hooks.md)</li>
+                <li>"POV: You place a vending machine using actual data" (screen recording + voiceover)</li>
+                <li>"Vending machine operators don't talk about this" (curiosity gap)</li>
+                <li>Post 3x/week starting launch week</li>
+            </ul>
+            <p><strong>KPIs:</strong> 5,000 total views first month, 5+ beta signups</p>
+        </div>
+
+        <div class="channel priority-medium">
+            <h3>🥈 Priority 5: LinkedIn (B2B Angle)</h3>
+            <p><strong>Effort:</strong> Low | <strong>Impact:</strong> Medium | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #5:</strong></p>
+            <ul>
+                <li>Route owners and semi-pro operators are on LinkedIn</li>
+                <li>B2B SaaS credibility boost</li>
+                <li>Partnership opportunities (vending machine manufacturers, suppliers)</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>Launch announcement post (professional tone)</li>
+                <li>"We analyzed foot traffic data from 1,000 locations — here's what vending operators should know"</li>
+                <li>Tag relevant companies (Canteen, Aramark small operators)</li>
+                <li>Engage with vending industry posts</li>
+            </ul>
+            <p><strong>KPIs:</strong> 500+ impressions, 3-5 beta signups, 2+ partnership inquiries</p>
+        </div>
+
+        <div class="channel priority-low">
+            <h3>🥉 Priority 6: Industry Forums & Blogs</h3>
+            <p><strong>Effort:</strong> Low | <strong>Impact:</strong> Low-Medium | <strong>Cost:</strong> <span class="cost-free">FREE</span></p>
+            <p><strong>Why it's #6:</strong></p>
+            <ul>
+                <li>Older, established community (VendingConnection, VendingWorld forums)</li>
+                <li>Lower traffic but highly engaged users</li>
+                <li>Good for SEO and backlinks</li>
+            </ul>
+            <p><strong>Tactics:</strong></p>
+            <ul>
+                <li>Forum signatures with VendRadar link</li>
+                <li>Answer questions about location selection</li>
+                <li>Sponsor giveaway (free 3-month access to 5 winners)</li>
+            </ul>
+            <p><strong>KPIs:</strong> 2-3 beta signups, SEO boost</p>
+        </div>
+
+        <div class="channel priority-low">
+            <h3>🥉 Priority 7: Paid Ads (ONLY after beta validation)</h3>
+            <p><strong>Effort:</strong> Medium | <strong>Impact:</strong> Variable | <strong>Cost:</strong> <span class="cost-low">$500-1000/month</span></p>
+            <p><strong>Why it's last:</strong> Burn money before product-market fit is validated</p>
+            <p><strong>When to start:</strong> After 30+ beta users, clear conversion metrics, positive feedback</p>
+            <p><strong>Channels:</strong></p>
+            <ul>
+                <li>Facebook Ads (targeting vending machine interest groups)</li>
+                <li>Google Ads ("vending machine location finder", "best vending locations")</li>
+                <li>Reddit Ads (r/vending, r/entrepreneur)</li>
+            </ul>
+        </div>
+
+        <h2>3. Launch Timeline (Week-by-Week)</h2>
+
+        <div class="timeline-week">
+            <h4>Week 1: Pre-Launch (Feb 17-23) — BUILD ANTICIPATION</h4>
+            <div class="action-item"><strong>Mon-Tue:</strong> Join Reddit, Facebook groups, start engaging (no pitching yet)</div>
+            <div class="action-item"><strong>Wed:</strong> Publish YouTube demo video</div>
+            <div class="action-item"><strong>Thu:</strong> First TikTok/Reels posts (problem-focused, no product pitch)</div>
+            <div class="action-item"><strong>Fri:</strong> Soft launch to Reddit (waitlist only, no full product access)</div>
+            <div class="action-item"><strong>Sat-Sun:</strong> Engage with all comments, build hype</div>
+            <p><strong>Goal:</strong> 30+ waitlist signups, 1,000+ YouTube views, visible presence in communities</p>
+        </div>
+
+        <div class="timeline-week">
+            <h4>Week 2: Launch Week (Feb 24 - Mar 2) — COORDINATED PUSH</h4>
+            <div class="action-item"><strong>Mon (Launch Day):</strong> Reddit launch post, Facebook groups, LinkedIn announcement</div>
+            <div class="action-item"><strong>Tue:</strong> Email waitlist (early access link)</div>
+            <div class="action-item"><strong>Wed:</strong> YouTube educational video ("How to Pick Profitable Vending Locations")</div>
+            <div class="action-item"><strong>Thu:</strong> TikTok/Reels product demo</div>
+            <div class="action-item"><strong>Fri:</strong> Reddit AMA thread</div>
+            <div class="action-item"><strong>Weekend:</strong> Engage with every comment/question across all platforms</div>
+            <p><strong>Goal:</strong> 50 beta users, 100+ upvotes on launch post, 3,000+ social impressions</p>
+        </div>
+
+        <div class="timeline-week">
+            <h4>Week 3-4: Post-Launch (Mar 3-16) — CONTENT ENGINE</h4>
+            <div class="action-item">Daily: Answer questions in Reddit/Facebook (authentic, helpful, not spammy)</div>
+            <div class="action-item">3x/week: TikTok/Reels (user testimonials, data insights, tips)</div>
+            <div class="action-item">Weekly: YouTube video (case study, tutorial, or data analysis)</div>
+            <div class="action-item">Weekly: "Data Drop" post on Reddit ("We analyzed X locations — here's what we learned")</div>
+            <div class="action-item">Collect user testimonials and screenshots for social proof</div>
+            <p><strong>Goal:</strong> 75 total users, 10+ testimonials, viral content piece (10K+ views)</p>
+        </div>
+
+        <div class="timeline-week">
+            <h4>Month 2: Referral Engine (Mar 17 - Apr 16)</h4>
+            <div class="action-item">Launch referral program: "Refer 3 operators, get 3 months free"</div>
+            <div class="action-item">User-generated content campaign: "Post your success story, get featured"</div>
+            <div class="action-item">Partner with 2-3 vending YouTubers (free access in exchange for review)</div>
+            <div class="action-item">Weekly webinar: "Live Q&A: Ask us about your vending locations"</div>
+            <p><strong>Goal:</strong> 100 paying customers, 20+ referrals, 2-3 influencer mentions</p>
+        </div>
+
+        <h2>4. Content Calendar (First 30 Days)</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Content</th>
+                    <th>Goal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Feb 19</td>
+                    <td>YouTube</td>
+                    <td>"VendRadar Demo: Find Profitable Vending Locations in 3 Minutes"</td>
+                    <td>1K views</td>
+                </tr>
+                <tr>
+                    <td>Feb 20</td>
+                    <td>TikTok/Reels</td>
+                    <td>"Vending operators lose $2,000/year on bad locations. Here's why."</td>
+                    <td>2K views</td>
+                </tr>
+                <tr>
+                    <td>Feb 21</td>
+                    <td>Reddit</td>
+                    <td>Waitlist post (r/vending, r/sweatystartup)</td>
+                    <td>20 signups</td>
+                </tr>
+                <tr>
+                    <td>Feb 24</td>
+                    <td>Reddit/FB/LI</td>
+                    <td>LAUNCH: "I Built a Tool to Find High-Traffic Vending Locations (Free Beta)"</td>
+                    <td>50 signups</td>
+                </tr>
+                <tr>
+                    <td>Feb 25</td>
+                    <td>Email</td>
+                    <td>Waitlist → Early access email</td>
+                    <td>50% open rate</td>
+                </tr>
+                <tr>
+                    <td>Feb 26</td>
+                    <td>YouTube</td>
+                    <td>"How to Pick Profitable Vending Locations (Data-Driven)"</td>
+                    <td>1.5K views</td>
+                </tr>
+                <tr>
+                    <td>Feb 27</td>
+                    <td>TikTok/Reels</td>
+                    <td>"POV: You use foot traffic data instead of guessing"</td>
+                    <td>3K views</td>
+                </tr>
+                <tr>
+                    <td>Feb 28</td>
+                    <td>Reddit</td>
+                    <td>AMA: "I'm building a vending location tool — AMA"</td>
+                    <td>100+ comments</td>
+                </tr>
+                <tr>
+                    <td>Mar 3</td>
+                    <td>LinkedIn</td>
+                    <td>"We analyzed 500 vending locations. Here's the #1 mistake."</td>
+                    <td>300 impressions</td>
+                </tr>
+                <tr>
+                    <td>Mar 5</td>
+                    <td>TikTok/Reels</td>
+                    <td>"This vending machine makes $300/month. This one makes $50. Guess the difference."</td>
+                    <td>5K views</td>
+                </tr>
+                <tr>
+                    <td>Mar 7</td>
+                    <td>YouTube</td>
+                    <td>"Case Study: How One Operator Increased Profit 40% with Better Placement"</td>
+                    <td>2K views</td>
+                </tr>
+                <tr>
+                    <td>Mar 10</td>
+                    <td>Reddit</td>
+                    <td>"Data Drop: We analyzed 100 gym vending machines. Here's what we found."</td>
+                    <td>150 upvotes</td>
+                </tr>
+                <tr>
+                    <td>Mar 12</td>
+                    <td>TikTok/Reels</td>
+                    <td>User testimonial (screen recording + voiceover)</td>
+                    <td>2K views</td>
+                </tr>
+                <tr>
+                    <td>Mar 14</td>
+                    <td>Facebook</td>
+                    <td>Free heat map giveaway (lead magnet)</td>
+                    <td>25 emails</td>
+                </tr>
+                <tr>
+                    <td>Mar 17</td>
+                    <td>YouTube</td>
+                    <td>"5 Vending Location Red Flags (Avoid These at All Costs)"</td>
+                    <td>2.5K views</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Success Metrics</h2>
+
+        <h3>Phase 1: Beta (Launch - Month 1)</h3>
+        <div class="metric">50 Beta Users</div>
+        <div class="metric">100+ Waitlist</div>
+        <div class="metric">5K+ Social Impressions</div>
+        <div class="metric">10+ Testimonials</div>
+
+        <h3>Phase 2: Paid Conversion (Month 2-3)</h3>
+        <div class="metric">100 Paying Customers</div>
+        <div class="metric">15% Beta → Paid Conversion</div>
+        <div class="metric">CAC < $20</div>
+        <div class="metric">20+ Referrals</div>
+
+        <h3>Key Metrics to Track Weekly</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Week 1</th>
+                    <th>Week 2</th>
+                    <th>Week 4</th>
+                    <th>Week 8</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Beta Signups</strong></td>
+                    <td>30</td>
+                    <td>50</td>
+                    <td>75</td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td><strong>Paying Customers</strong></td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>20</td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td><strong>Reddit Karma</strong></td>
+                    <td>50</td>
+                    <td>200</td>
+                    <td>500</td>
+                    <td>1000</td>
+                </tr>
+                <tr>
+                    <td><strong>YouTube Views</strong></td>
+                    <td>1K</td>
+                    <td>3K</td>
+                    <td>7K</td>
+                    <td>15K</td>
+                </tr>
+                <tr>
+                    <td><strong>Social Followers</strong></td>
+                    <td>50</td>
+                    <td>150</td>
+                    <td>400</td>
+                    <td>1000</td>
+                </tr>
+                <tr>
+                    <td><strong>CAC (Customer Acquisition Cost)</strong></td>
+                    <td>$0</td>
+                    <td>$0</td>
+                    <td>$5</td>
+                    <td>$15</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>North Star Metric</h3>
+        <div class="emphasis">
+            <strong>Weekly Active Users (WAU):</strong> Number of users who log in and run at least one location analysis per week.
+            <br><br>
+            <strong>Why:</strong> Engagement = product-market fit. If users aren't using it weekly, they won't pay for it.
+            <br><br>
+            <strong>Target:</strong> 60% of beta users active weekly by Week 4
+        </div>
+
+        <h2>6. Budget Breakdown</h2>
+
+        <h3>Month 1-2: Organic Only (Total: $0-100)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Cost</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Reddit/Facebook/LinkedIn</td>
+                    <td class="cost-free">FREE</td>
+                    <td>Organic posting only</td>
+                </tr>
+                <tr>
+                    <td>YouTube/TikTok/Reels</td>
+                    <td class="cost-free">FREE</td>
+                    <td>DIY videos (screen recording + iPhone)</td>
+                </tr>
+                <tr>
+                    <td>Video editing (optional)</td>
+                    <td>$0-50</td>
+                    <td>CapCut (free) or Descript ($12/mo)</td>
+                </tr>
+                <tr>
+                    <td>Stock footage (optional)</td>
+                    <td>$0-50</td>
+                    <td>Pexels (free) or Envato ($16/mo)</td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL</strong></td>
+                    <td class="cost-free"><strong>$0-100</strong></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Month 3+: Organic + Paid (Budget: $500-1000/month)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Channel</th>
+                    <th>Budget</th>
+                    <th>Expected CAC</th>
+                    <th>Expected Signups</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Facebook Ads</td>
+                    <td>$300</td>
+                    <td>$15-25</td>
+                    <td>12-20</td>
+                </tr>
+                <tr>
+                    <td>Google Ads</td>
+                    <td>$200</td>
+                    <td>$20-30</td>
+                    <td>7-10</td>
+                </tr>
+                <tr>
+                    <td>Reddit Ads</td>
+                    <td>$100</td>
+                    <td>$10-15</td>
+                    <td>7-10</td>
+                </tr>
+                <tr>
+                    <td>Influencer sponsorships</td>
+                    <td>$100-200</td>
+                    <td>$5-10</td>
+                    <td>10-40</td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong>$700-800</strong></td>
+                    <td><strong>$15-20</strong></td>
+                    <td><strong>36-80 signups</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="emphasis">
+            <strong>⚠️ IMPORTANT:</strong> DO NOT run paid ads until you have:
+            <ul>
+                <li>30+ beta users actively using the product</li>
+                <li>Clear conversion funnel (landing page → signup → activation)</li>
+                <li>Positive feedback and testimonials</li>
+                <li>10%+ beta-to-paid conversion rate</li>
+            </ul>
+            Burning money before product-market fit = startup graveyard.
+        </div>
+
+        <h2>7. Viral Mechanics & Referral Strategy</h2>
+
+        <h3>Built-In Sharing Triggers</h3>
+        <ul>
+            <li><strong>Location heat maps:</strong> "Share this map with other operators" (Twitter/LinkedIn/Facebook)</li>
+            <li><strong>ROI calculator:</strong> "Your location could generate $X more/month" → shareable graphic</li>
+            <li><strong>Leaderboard:</strong> "Top performing vending locations in your city" (competitive sharing)</li>
+            <li><strong>Comparison tool:</strong> "Compare Location A vs B" → screenshot-worthy results</li>
+        </ul>
+
+        <h3>Referral Program (Launch Month 2)</h3>
+        <div class="action-item">
+            <strong>Incentive:</strong> Refer 3 operators → Get 3 months free (or $50 credit)
+        </div>
+        <div class="action-item">
+            <strong>Tracking:</strong> Unique referral links, dashboard showing referral count
+        </div>
+        <div class="action-item">
+            <strong>Promotion:</strong> Email blast, in-app banner, social posts
+        </div>
+        <div class="action-item">
+            <strong>Target:</strong> 20% of users refer at least 1 person
+        </div>
+
+        <h3>Community Building</h3>
+        <ul>
+            <li><strong>Discord/Slack:</strong> Private community for beta users (peer support, networking)</li>
+            <li><strong>Weekly live Q&A:</strong> Chris answers location questions (builds trust, engagement)</li>
+            <li><strong>User spotlights:</strong> "Operator of the Week" featured on social media</li>
+        </ul>
+
+        <h2>8. Risk Mitigation</h2>
+
+        <h3>What Could Go Wrong?</h3>
+        
+        <div class="channel">
+            <strong>❌ Risk: Reddit/Facebook bans for self-promotion</strong>
+            <p><strong>Mitigation:</strong></p>
+            <ul>
+                <li>Lead with value, not product pitch (90% helpful, 10% product mention)</li>
+                <li>Use personal account, not brand account</li>
+                <li>Build karma first (participate authentically for 1 week before posting)</li>
+                <li>One launch post per community (no spam)</li>
+            </ul>
+        </div>
+
+        <div class="channel">
+            <strong>❌ Risk: Low engagement / crickets on launch</strong>
+            <p><strong>Mitigation:</strong></p>
+            <ul>
+                <li>Seed engagement with 5-7 friends/beta users commenting first</li>
+                <li>Post at optimal times (Tue-Thu, 10AM-2PM EST for Reddit)</li>
+                <li>Hook testing: A/B test 3 different titles before launch</li>
+            </ul>
+        </div>
+
+        <div class="channel">
+            <strong>❌ Risk: Product not ready / bugs on launch day</strong>
+            <p><strong>Mitigation:</strong></p>
+            <ul>
+                <li>Soft launch to waitlist first (control traffic)</li>
+                <li>Clear "Beta" labeling (sets expectations)</li>
+                <li>Chris available for support on launch day</li>
+                <li>Feedback loop: "Report bugs, get 3 months free"</li>
+            </ul>
+        </div>
+
+        <div class="channel">
+            <strong>❌ Risk: Paid ads waste money</strong>
+            <p><strong>Mitigation:</strong></p>
+            <ul>
+                <li>Don't run paid ads until organic proves PMF</li>
+                <li>Start with $100 test budget, measure CAC before scaling</li>
+                <li>Retargeting only (cheaper, higher conversion)</li>
+            </ul>
+        </div>
+
+        <h2>9. Day 1 Action Checklist</h2>
+
+        <div class="action-item">✅ Create Reddit account (if not already) + build karma (comment on 10+ posts)</div>
+        <div class="action-item">✅ Join 5 Facebook groups (Vending Nation, Vending Machine Operators, etc.)</div>
+        <div class="action-item">✅ Set up YouTube channel (VendRadar or personal brand)</div>
+        <div class="action-item">✅ Create TikTok + Instagram accounts</div>
+        <div class="action-item">✅ Write Reddit launch post (use reddit-launch-post.md template)</div>
+        <div class="action-item">✅ Write landing page copy (use landing-page-copy.md)</div>
+        <div class="action-item">✅ Record 3-min product demo (use demo-script.md)</div>
+        <div class="action-item">✅ Create 3 short-form videos (use social-hooks.md for ideas)</div>
+        <div class="action-item">✅ Set up email waitlist (ConvertKit, Mailchimp, or Beehiiv free tier)</div>
+        <div class="action-item">✅ Schedule content calendar in Notion/Airtable/Google Sheets</div>
+
+        <div class="emphasis">
+            <strong>🚀 LAUNCH READY:</strong> All content assets are in the <code>projects/vendsite/marketing/</code> folder. Deploy immediately or iterate based on feedback.
+        </div>
+
+        <hr style="margin: 40px 0;">
+        
+        <p style="text-align: center; color: #666; font-size: 14px;">
+            <strong>Last Updated:</strong> February 17, 2026<br>
+            <strong>Next Review:</strong> Launch Day (Feb 24) + Weekly thereafter
+        </p>
+    </div>
+</body>
+</html>
