@@ -132,7 +132,7 @@ export default function Home() {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {locations.map((location) => (
+                    {locations.map((location: LocationData) => (
                       <LocationCard 
                         key={location.id}
                         location={location}
