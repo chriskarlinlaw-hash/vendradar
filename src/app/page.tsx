@@ -51,9 +51,9 @@ export default function Home() {
             <nav className="flex items-center gap-6">
               <a href="#features" className="text-sm text-gray-600 hover:text-gray-900">Features</a>
               <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</a>
-              <button className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
-                Sign In
-              </button>
+              <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-full font-medium">
+                Beta • Free Access
+              </span>
             </nav>
           </div>
         </div>
@@ -220,6 +220,120 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Beta pricing — lock in this rate forever when you sign up now.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Free Tier */}
+            <div className="bg-white rounded-xl border border-gray-200 p-8">
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Free</div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$0</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>5 location searches per day</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Basic scoring & demographics</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>PDF export (1 per day)</span>
+                </li>
+              </ul>
+              <button className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                Get Started
+              </button>
+            </div>
+
+            {/* Pro Tier */}
+            <div className="bg-white rounded-xl border-2 border-blue-500 p-8 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </div>
+              <div className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$49</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span><strong>Unlimited</strong> location searches</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Advanced scoring & AI insights</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Unlimited PDF exports</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Save favorite locations</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Email reports</span>
+                </li>
+              </ul>
+              <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Enterprise Tier */}
+            <div className="bg-white rounded-xl border border-gray-200 p-8">
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Enterprise</div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">Custom</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Everything in Pro</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Multi-user accounts</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>API access</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Custom integrations</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Dedicated support</span>
+                </li>
+              </ul>
+              <button className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                Contact Sales
+              </button>
+            </div>
+          </div>
+          
+          <p className="text-center text-sm text-gray-500 mt-8">
+            Beta users lock in current pricing forever. Price increases after public launch.
+          </p>
         </div>
       </section>
 

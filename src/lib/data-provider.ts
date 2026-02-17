@@ -35,20 +35,54 @@ interface CensusGeoResult {
 }
 
 /**
- * Geocode a city/address to Census FIPS codes using Census Geocoder.
- * Returns state + county + tract codes for ACS data lookup.
+ * Use Google Geocoding to convert city name to lat/lng, then reverse geocode to Census tract.
+ * Census geocoder needs street addresses, not city names.
  */
 async function geocodeToCensusTract(query: string): Promise<CensusGeoResult | null> {
   try {
+    // First, try Census geocoder directly (works for street addresses)
     const encodedQuery = encodeURIComponent(query);
-    const url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${encodedQuery}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
+    let url = `https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=${encodedQuery}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
 
-    const res = await fetch(url);
+    let res = await fetch(url);
     if (!res.ok) return null;
 
-    const data = await res.json();
-    const match = data?.result?.addressMatches?.[0];
-    if (!match) return null;
+    let data = await res.json();
+    let match = data?.result?.addressMatches?.[0];
+    
+    // If Census geocoder fails (city name without address), use Google Geocoding
+    if (!match) {
+      const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+      if (!googleApiKey) return null;
+      
+      const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedQuery}&key=${googleApiKey}`;
+      const googleRes = await fetch(googleUrl);
+      if (!googleRes.ok) return null;
+      
+      const googleData = await googleRes.json();
+      const googleMatch = googleData?.results?.[0];
+      if (!googleMatch) return null;
+      
+      const lat = googleMatch.geometry.location.lat;
+      const lng = googleMatch.geometry.location.lng;
+      
+      // Reverse geocode lat/lng to Census tract
+      url = `https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=${lng}&y=${lat}&benchmark=Public_AR_Current&vintage=Current_Current&format=json`;
+      res = await fetch(url);
+      if (!res.ok) return null;
+      
+      data = await res.json();
+      const censusResult = data?.result?.geographies?.['Census Tracts']?.[0];
+      if (!censusResult) return null;
+      
+      return {
+        state: censusResult.STATE,
+        county: censusResult.COUNTY,
+        tract: censusResult.TRACT,
+        lat,
+        lng,
+      };
+    }
 
     const geographies = match.geographies?.['Census Tracts']?.[0];
     if (!geographies) return null;

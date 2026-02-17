@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 
 interface SearchBarProps {
@@ -11,6 +11,27 @@ interface SearchBarProps {
 
 export default function SearchBar({ onSearch, isLoading, placeholder = 'Enter city or address...' }: SearchBarProps) {
   const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  useEffect(() => {
+    // Initialize Google Places Autocomplete
+    if (inputRef.current && typeof google !== 'undefined' && google.maps?.places) {
+      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+        types: ['(cities)'],
+        fields: ['formatted_address', 'name'],
+      });
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place?.formatted_address) {
+          setQuery(place.formatted_address);
+        } else if (place?.name) {
+          setQuery(place.name);
+        }
+      });
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +44,7 @@ export default function SearchBar({ onSearch, isLoading, placeholder = 'Enter ci
     <form onSubmit={handleSubmit} className="relative">
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
