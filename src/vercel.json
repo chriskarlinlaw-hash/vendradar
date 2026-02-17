@@ -1,0 +1,26 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "vendpick.com"
+        }
+      ],
+      "destination": "https://vendradar.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.vendpick.com"
+        }
+      ],
+      "destination": "https://vendradar.com/$1",
+      "permanent": true
+    }
+  ]
+}
