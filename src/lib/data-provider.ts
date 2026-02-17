@@ -17,7 +17,7 @@ import { calculateLocationScore, generateAIReasoning } from './scoring';
 // ─── Interface ────────────────────────────────────────────────────────
 
 export interface DataProvider {
-  searchLocations(query: string, category: Category): Promise<LocationData[]>;
+  searchLocations(query: string, categories: Category[]): Promise<LocationData[]>;
   getLocationByAddress(address: string, category: Category): Promise<LocationData | null>;
 }
 
@@ -104,19 +104,19 @@ async function fetchCensusDemographics(geo: CensusGeoResult): Promise<Demographi
 // ─── Real Data Provider (Census API) ──────────────────────────────────
 
 class CensusDataProvider implements DataProvider {
-  async searchLocations(query: string, category: Category): Promise<LocationData[]> {
+  async searchLocations(query: string, categories: Category[]): Promise<LocationData[]> {
     // For MVP, geocode the query and fetch tract-level demographics
     const geo = await geocodeToCensusTract(query);
     if (!geo) {
       // Fallback to mock if geocoding fails
       const { searchLocations: mockSearch } = await import('./mock-data');
-      return mockSearch(query, category);
+      return mockSearch(query, categories);
     }
 
     const demographics = await fetchCensusDemographics(geo);
     if (!demographics) {
       const { searchLocations: mockSearch } = await import('./mock-data');
-      return mockSearch(query, category);
+      return mockSearch(query, categories);
     }
 
     // TODO: Replace these with real Google Places API data
@@ -134,25 +134,28 @@ class CensusDataProvider implements DataProvider {
       saturationLevel: 'low',
     };
 
-    const score = calculateLocationScore(demographics, competition, footTraffic, category);
-    const reasoning = generateAIReasoning(score, category);
+    // Generate results for each category
+    return categories.map((category, index) => {
+      const score = calculateLocationScore(demographics, competition, footTraffic, category);
+      const reasoning = generateAIReasoning(score, category);
 
-    return [{
-      id: `loc-census-${Date.now()}`,
-      address: query,
-      lat: 0, // TODO: Get from geocoder response
-      lng: 0,
-      category,
-      score,
-      demographics,
-      competition,
-      footTraffic,
-      aiReasoning: reasoning,
-    }];
+      return {
+        id: `loc-census-${Date.now()}-${index}`,
+        address: query,
+        lat: 0, // TODO: Get from geocoder response
+        lng: 0,
+        category,
+        score,
+        demographics,
+        competition,
+        footTraffic,
+        aiReasoning: reasoning,
+      };
+    });
   }
 
   async getLocationByAddress(address: string, category: Category): Promise<LocationData | null> {
-    const results = await this.searchLocations(address, category);
+    const results = await this.searchLocations(address, [category]);
     return results[0] || null;
   }
 }
@@ -160,9 +163,9 @@ class CensusDataProvider implements DataProvider {
 // ─── Mock Data Provider (fallback) ────────────────────────────────────
 
 class MockDataProvider implements DataProvider {
-  async searchLocations(query: string, category: Category): Promise<LocationData[]> {
+  async searchLocations(query: string, categories: Category[]): Promise<LocationData[]> {
     const { searchLocations } = await import('./mock-data');
-    return searchLocations(query, category);
+    return searchLocations(query, categories);
   }
 
   async getLocationByAddress(address: string, category: Category): Promise<LocationData | null> {
