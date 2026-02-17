@@ -11,7 +11,7 @@ import LocationDetail from '@/components/LocationDetail';
 import { MapPin, Sparkles, TrendingUp, Shield } from 'lucide-react';
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<Category>('office');
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>(['office']);
   const [locations, setLocations] = useState<LocationData[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function Home() {
     setSelectedLocation(null);
     
     try {
-      const results = await searchLocations(query, selectedCategory);
+      const results = await searchLocations(query, selectedCategories);
       setLocations(results);
       if (results.length > 0) {
         setSelectedLocation(results[0]);
@@ -104,8 +104,8 @@ export default function Home() {
           {/* Category Selector */}
           <div className="max-w-2xl mx-auto mb-8">
             <CategorySelector 
-              selected={selectedCategory}
-              onSelect={setSelectedCategory}
+              selected={selectedCategories}
+              onSelect={setSelectedCategories}
             />
           </div>
 

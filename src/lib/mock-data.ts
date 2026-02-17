@@ -183,7 +183,7 @@ function generateGenericLocations(query: string): Partial<LocationData>[] {
 // Generate mock location data
 export async function searchLocations(
   query: string,
-  category: Category
+  categories: Category[]
 ): Promise<LocationData[]> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 800));
@@ -204,28 +204,35 @@ export async function searchLocations(
     baseLocations = generateGenericLocations(query);
   }
 
-  // Enrich with scores and reasoning
-  return baseLocations.map((base, index) => {
+  // Enrich with scores and reasoning for each category
+  const results: LocationData[] = [];
+  
+  baseLocations.forEach((base, baseIndex) => {
     const demo = base.demographics as Demographics;
     const comp = base.competition as Competition;
     const ft = base.footTraffic as FootTraffic;
     
-    const score = calculateLocationScore(demo, comp, ft, category);
-    const reasoning = generateAIReasoning(score, category);
+    categories.forEach((category, catIndex) => {
+      const score = calculateLocationScore(demo, comp, ft, category);
+      const reasoning = generateAIReasoning(score, category);
 
-    return {
-      id: `loc-${Date.now()}-${index}`,
-      address: base.address || 'Unknown Location',
-      lat: base.lat || 0,
-      lng: base.lng || 0,
-      category,
-      score,
-      demographics: demo,
-      competition: comp,
-      footTraffic: ft,
-      aiReasoning: reasoning,
-    };
+      results.push({
+        id: `loc-${Date.now()}-${baseIndex}-${catIndex}`,
+        address: base.address || 'Unknown Location',
+        lat: base.lat || 0,
+        lng: base.lng || 0,
+        category,
+        score,
+        demographics: demo,
+        competition: comp,
+        footTraffic: ft,
+        aiReasoning: reasoning,
+      });
+    });
   });
+  
+  // Sort by overall score (descending)
+  return results.sort((a, b) => b.score.overall - a.score.overall);
 }
 
 // Get single location by address (mock)
@@ -233,6 +240,6 @@ export async function getLocationByAddress(
   address: string,
   category: Category
 ): Promise<LocationData | null> {
-  const results = await searchLocations(address, category);
+  const results = await searchLocations(address, [category]);
   return results[0] || null;
 }
