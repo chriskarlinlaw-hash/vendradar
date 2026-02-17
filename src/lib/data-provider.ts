@@ -30,6 +30,8 @@ interface CensusGeoResult {
   state: string;
   county: string;
   tract: string;
+  lat: number;
+  lng: number;
 }
 
 /**
@@ -51,10 +53,17 @@ async function geocodeToCensusTract(query: string): Promise<CensusGeoResult | nu
     const geographies = match.geographies?.['Census Tracts']?.[0];
     if (!geographies) return null;
 
+    // Extract coordinates from geocoder response
+    const coords = match.coordinates;
+    const lat = coords?.y || 0;
+    const lng = coords?.x || 0;
+
     return {
       state: geographies.STATE,
       county: geographies.COUNTY,
       tract: geographies.TRACT,
+      lat,
+      lng,
     };
   } catch {
     return null;
@@ -142,8 +151,8 @@ class CensusDataProvider implements DataProvider {
       return {
         id: `loc-census-${Date.now()}-${index}`,
         address: query,
-        lat: 0, // TODO: Get from geocoder response
-        lng: 0,
+        lat: geo.lat,
+        lng: geo.lng,
         category,
         score,
         demographics,

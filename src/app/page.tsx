@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Category, LocationData } from '@/lib/types';
-import { searchLocations } from '@/lib/mock-data';
+import { dataProvider } from '@/lib/data-provider';
 import CategorySelector from '@/components/CategorySelector';
 import SearchBar from '@/components/SearchBar';
 import MapView from '@/components/MapView';
@@ -23,7 +23,7 @@ export default function Home() {
     setSelectedLocation(null);
     
     try {
-      const results = await searchLocations(query, selectedCategories);
+      const results = await dataProvider.searchLocations(query, selectedCategories);
       setLocations(results);
       if (results.length > 0) {
         setSelectedLocation(results[0]);
