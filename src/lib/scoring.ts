@@ -83,6 +83,69 @@ export const CATEGORIES: CategoryConfig[] = [
   },
 ];
 
+/**
+ * Estimate building-type fit from Census demographics when we don't have
+ * Google Places building classification. Returns a score 0-100.
+ *
+ * Logic per category:
+ *   office       — high income, moderate-high employment → higher score
+ *   gym          — high income, younger median age → higher score
+ *   hospital     — higher population (more patients/staff) → higher score
+ *   school       — younger median age → higher score
+ *   manufacturing — lower income + high employment → higher score (blue-collar area)
+ *   apartment    — moderate-high population → higher score
+ *   hotel        — high income area (tourism-adjacent) → higher score
+ *   transit      — high population density → higher score
+ */
+function estimateBuildingTypeFit(demographics: Demographics, category: Category): number {
+  const { medianIncome, population, medianAge, employmentRate } = demographics;
+
+  switch (category) {
+    case 'office':
+      if (medianIncome >= 65000 && employmentRate >= 0.7) return 88;
+      if (medianIncome >= 50000) return 72;
+      return 55;
+
+    case 'gym':
+      if (medianIncome >= 60000 && medianAge <= 40) return 90;
+      if (medianIncome >= 45000 && medianAge <= 50) return 73;
+      return 52;
+
+    case 'hospital':
+      if (population >= 20000) return 85;
+      if (population >= 10000) return 72;
+      return 58;
+
+    case 'school':
+      if (medianAge <= 30 && population >= 10000) return 88;
+      if (medianAge <= 35) return 70;
+      return 55;
+
+    case 'manufacturing':
+      if (employmentRate >= 0.7 && medianIncome <= 55000) return 87;
+      if (employmentRate >= 0.6) return 70;
+      return 50;
+
+    case 'apartment':
+      if (population >= 15000 && medianIncome >= 45000) return 85;
+      if (population >= 8000) return 70;
+      return 55;
+
+    case 'hotel':
+      if (medianIncome >= 60000) return 86;
+      if (medianIncome >= 45000) return 70;
+      return 52;
+
+    case 'transit':
+      if (population >= 25000) return 90;
+      if (population >= 12000) return 75;
+      return 55;
+
+    default:
+      return 70;
+  }
+}
+
 // Calculate location score based on category-specific weights
 export function calculateLocationScore(
   demographics: Demographics,
@@ -120,8 +183,13 @@ export function calculateLocationScore(
   // Foot traffic score (0-100)
   const footTrafficScore = footTraffic.score;
 
-  // Building type score (0-100) - assumed good match for demo
-  const buildingTypeScore = 75;
+  // Building type score (0-100) — heuristic based on demographics fit per category.
+  // Without Google Places building data, we infer fit from Census demographics:
+  //   • High population density + high income → good for office/hotel/gym
+  //   • High population + lower income → good for manufacturing/transit/school
+  //   • Moderate density + moderate income → good for apartments
+  // TODO: Replace with Google Places API "types" field for real building classification.
+  const buildingTypeScore = estimateBuildingTypeFit(demographics, category);
 
   // Calculate weighted overall score
   const overall = Math.round(

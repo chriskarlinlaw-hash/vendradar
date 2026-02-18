@@ -11,7 +11,6 @@ interface MapViewProps {
   center?: { lat: number; lng: number };
 }
 
-// Check if Google Maps API key is configured
 const GOOGLE_MAPS_API_KEY = typeof window !== 'undefined'
   ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
   : '';
@@ -23,10 +22,11 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  // Load Google Maps script
+  // Wait for Google Maps script (loaded globally via layout.tsx)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.google?.maps) {
@@ -34,17 +34,20 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setMapLoaded(true);
-    script.onerror = () => setLoadError(true);
-    document.head.appendChild(script);
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.google?.maps) {
+        setMapLoaded(true);
+        clearInterval(interval);
+      } else if (attempts > 100) {
+        // ~20 seconds — give up
+        setLoadError(true);
+        clearInterval(interval);
+      }
+    }, 200);
 
-    return () => {
-      // Don't remove script on cleanup — Google Maps doesn't support re-init
-    };
+    return () => clearInterval(interval);
   }, []);
 
   // Initialize map
@@ -58,14 +61,21 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
     googleMapRef.current = new google.maps.Map(mapRef.current, {
       center: defaultCenter,
       zoom: 13,
-      mapTypeControl: false,
-      streetViewControl: false,
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_LEFT,
+      },
+      streetViewControl: true,
       fullscreenControl: true,
+      zoomControl: true,
       styles: [
-        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-        { featureType: 'transit', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+        { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+        { featureType: 'poi.park', elementType: 'labels', stylers: [{ visibility: 'off' }] },
       ],
     });
+
+    infoWindowRef.current = new google.maps.InfoWindow();
   }, [mapLoaded, center, locations]);
 
   // Update markers when locations change
@@ -98,11 +108,28 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
           path: google.maps.SymbolPath.CIRCLE,
           fillColor: color,
           fillOpacity: 1,
-          strokeColor: '#ffffff',
+          strokeColor: isSelected ? '#1d4ed8' : '#ffffff',
           strokeWeight: isSelected ? 3 : 2,
-          scale: isSelected ? 18 : 14,
+          scale: isSelected ? 20 : 15,
         },
         zIndex: isSelected ? 1000 : 1,
+        animation: isSelected ? google.maps.Animation.BOUNCE : undefined,
+      });
+
+      // Info window on hover
+      marker.addListener('mouseover', () => {
+        if (infoWindowRef.current) {
+          infoWindowRef.current.setContent(`
+            <div style="padding: 8px; max-width: 250px;">
+              <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.address}</div>
+              <div style="color: ${color}; font-weight: bold; font-size: 18px;">Score: ${loc.score.overall}/100</div>
+              <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                Income: $${Math.round(loc.demographics.medianIncome).toLocaleString()} · Traffic: ${Math.round(loc.footTraffic.dailyEstimate).toLocaleString()}/day
+              </div>
+            </div>
+          `);
+          infoWindowRef.current.open(googleMapRef.current!, marker);
+        }
       });
 
       marker.addListener('click', () => onSelectLocation(loc));
@@ -110,7 +137,7 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
       bounds.extend({ lat: loc.lat, lng: loc.lng });
     });
 
-    // Fit map to show all markers with padding
+    // Fit map to show all markers
     if (locations.length > 1) {
       googleMapRef.current.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
     } else {
@@ -118,6 +145,22 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
       googleMapRef.current.setZoom(15);
     }
   }, [locations, selectedLocation, mapLoaded, onSelectLocation]);
+
+  // Pan to selected location
+  useEffect(() => {
+    if (!googleMapRef.current || !selectedLocation) return;
+    googleMapRef.current.panTo({ lat: selectedLocation.lat, lng: selectedLocation.lng });
+
+    // Stop bouncing on previous markers
+    markersRef.current.forEach((m, i) => {
+      if (locations[i]?.id === selectedLocation.id) {
+        m.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => m.setAnimation(null), 1500);
+      } else {
+        m.setAnimation(null);
+      }
+    });
+  }, [selectedLocation, locations]);
 
   if (loadError) {
     return <FallbackMapView locations={locations} selectedLocation={selectedLocation} onSelectLocation={onSelectLocation} center={center} />;
@@ -134,7 +177,6 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
           </div>
         </div>
       )}
-      {/* Location count */}
       {locations.length > 0 && (
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-md px-3 py-2">
           <span className="text-sm font-medium text-gray-700">{locations.length} locations found</span>
@@ -146,12 +188,11 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
 
 // ─── SVG Fallback (no API key) ────────────────────────────────────────
 function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapViewProps) {
-  // Calculate bounds from locations to properly center the SVG view
   const getBounds = useCallback(() => {
     if (locations.length === 0) return { minLat: 39, maxLat: 40, minLng: -99, maxLng: -98 };
     const lats = locations.map(l => l.lat);
     const lngs = locations.map(l => l.lng);
-    const padding = 0.005; // Small padding around markers
+    const padding = 0.005;
     return {
       minLat: Math.min(...lats) - padding,
       maxLat: Math.max(...lats) + padding,
@@ -164,7 +205,6 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
   const latRange = bounds.maxLat - bounds.minLat || 0.01;
   const lngRange = bounds.maxLng - bounds.minLng || 0.01;
 
-  // Project lat/lng into SVG space (0-800 x 0-600)
   const project = (lat: number, lng: number) => {
     const x = ((lng - bounds.minLng) / lngRange) * 720 + 40;
     const y = ((bounds.maxLat - lat) / latRange) * 520 + 40;
@@ -173,7 +213,6 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
 
   return (
     <div className="relative w-full h-full bg-gray-100 rounded-lg overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
         <svg className="w-full h-full opacity-20">
           <defs>
@@ -185,12 +224,10 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
         </svg>
       </div>
 
-      {/* No API key notice */}
       <div className="absolute top-4 left-4 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 z-10">
         <span className="text-xs text-yellow-700">Preview mode — add Google Maps API key for full map</span>
       </div>
 
-      {/* Location markers */}
       <svg className="absolute inset-0 w-full h-full">
         {locations.map((location) => {
           const coords = project(location.lat, location.lng);
@@ -232,7 +269,6 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
         })}
       </svg>
 
-      {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-3">
         <div className="text-xs font-medium text-gray-600 mb-2">Location Score</div>
         <div className="space-y-1">
@@ -250,7 +286,6 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
         </div>
       </div>
 
-      {/* Location count */}
       {locations.length > 0 && (
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-md px-3 py-2">
           <span className="text-sm font-medium text-gray-700">{locations.length} locations found</span>
@@ -260,7 +295,7 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
   );
 }
 
-// ─── Exported Component (auto-selects implementation) ─────────────────
+// ─── Exported Component ─────────────────────────────────────────
 export default function MapView(props: MapViewProps) {
   if (hasGoogleMapsKey) {
     return <GoogleMapView {...props} />;

@@ -17,13 +17,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, lat?: number, lng?: number) => {
     setIsLoading(true);
     setHasSearched(true);
     setSelectedLocation(null);
-    
+
     try {
-      const results = await dataProvider.searchLocations(query, selectedCategories);
+      const results = await dataProvider.searchLocations(query, selectedCategories, lat, lng);
       setLocations(results);
       if (results.length > 0) {
         setSelectedLocation(results[0]);
@@ -229,81 +229,116 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Beta pricing — lock in this rate forever when you sign up now.
+              100% self-serve. Start free, upgrade when you&apos;re ready.
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {/* Free Tier */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8">
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Free</div>
-              <div className="mb-6">
+              <div className="mb-5">
                 <span className="text-4xl font-bold text-gray-900">$0</span>
                 <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8">
+              <p className="text-xs text-gray-500 mb-4">Prove the value before you pay</p>
+              <ul className="space-y-2.5 mb-6">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>5 location searches per day</span>
+                  <span>5 location lookups per month</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Basic scoring & demographics</span>
+                  <span>Basic demographics</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>PDF export (1 per day)</span>
+                  <span>Location score</span>
                 </li>
               </ul>
-              <button className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+              <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="block w-full bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center cursor-pointer text-sm">
+                Start Searching
+              </a>
+            </div>
+
+            {/* Basic Tier */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Basic</div>
+              <div className="mb-5">
+                <span className="text-4xl font-bold text-gray-900">$29</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Scout Mode — active location scouting</p>
+              <ul className="space-y-2.5 mb-6">
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span><strong>Unlimited</strong> lookups</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>All 8 category filters</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>Full data overlays</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-600">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span>PDF export</span>
+                </li>
+              </ul>
+              <a href="/beta" className="block w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center text-sm">
                 Get Started
-              </button>
+              </a>
             </div>
 
             {/* Pro Tier */}
-            <div className="bg-white rounded-xl border-2 border-blue-500 p-8 relative">
+            <div className="bg-white rounded-xl border-2 border-blue-500 p-6 relative">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                 MOST POPULAR
               </div>
               <div className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Pro</div>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$49</span>
+              <div className="mb-5">
+                <span className="text-4xl font-bold text-gray-900">$79</span>
                 <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8">
+              <p className="text-xs text-gray-500 mb-4">AI Prospector — let AI find locations for you</p>
+              <ul className="space-y-2.5 mb-6">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span><strong>Unlimited</strong> location searches</span>
+                  <span>Everything in Basic</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Advanced scoring & AI insights</span>
+                  <span>AI recommendations</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Unlimited PDF exports</span>
+                  <span>Batch analysis (50 addresses)</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Save favorite locations</span>
+                  <span>Competition alerts</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Email reports</span>
+                  <span>Priority support</span>
                 </li>
               </ul>
-              <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              <a href="/beta" className="block w-full bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center text-sm">
                 Start Free Trial
-              </button>
+              </a>
             </div>
 
             {/* Enterprise Tier */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8">
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Enterprise</div>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">Custom</span>
+              <div className="mb-5">
+                <span className="text-4xl font-bold text-gray-900">$299</span>
+                <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8">
+              <p className="text-xs text-gray-500 mb-4">For teams and large operators (500+ machines)</p>
+              <ul className="space-y-2.5 mb-6">
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
                   <span>Everything in Pro</span>
@@ -318,21 +353,21 @@ export default function Home() {
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Custom integrations</span>
+                  <span>White-label reports</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-600">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>Dedicated support</span>
+                  <span>Custom scoring algorithms</span>
                 </li>
               </ul>
-              <button className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                Contact Sales
-              </button>
+              <a href="/beta" className="block w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center text-sm">
+                Get Started
+              </a>
             </div>
           </div>
-          
+
           <p className="text-center text-sm text-gray-500 mt-8">
-            Beta users lock in current pricing forever. Price increases after public launch.
+            All plans are self-serve. No contracts, cancel anytime.
           </p>
         </div>
       </section>
@@ -346,9 +381,9 @@ export default function Home() {
           <p className="text-gray-400 mb-8">
             Be among the first vending operators to use data — not guesses — to grow their business.
           </p>
-          <button className="bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors">
+          <a href="/beta" className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors">
             Start Free Trial
-          </button>
+          </a>
           <p className="text-gray-500 text-sm mt-4">No credit card required. 14-day free trial.</p>
         </div>
       </section>

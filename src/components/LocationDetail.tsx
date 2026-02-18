@@ -116,7 +116,7 @@ export default function LocationDetail({ location, onClose }: LocationDetailProp
               <span className="text-xs">Median Income</span>
             </div>
             <div className="text-xl font-bold text-gray-800">
-              ${location.demographics.medianIncome.toLocaleString()}
+              ${Math.round(location.demographics.medianIncome).toLocaleString()}
             </div>
           </div>
           <div className="bg-gray-50 rounded-lg p-4">
