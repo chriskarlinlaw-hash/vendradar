@@ -1,19 +1,30 @@
 /**
- * /api/search — Server-side location search
+ * /api/search — V2 Server-side location search
  *
- * Proxies Google Places Nearby Search + Census ACS calls that can't run
- * from the browser (CORS). Returns fully scored LocationData[].
+ * Flow: Geocode → Nearby Search → Place Details → Census → V2 Scoring
+ * Returns fully scored LocationData[] + HeatMapDataPoint[]
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Category, Demographics, Competition, FootTraffic, LocationData } from '@/lib/types';
-import { calculateLocationScore, generateAIReasoning } from '@/lib/scoring';
+import {
+  Category,
+  Demographics,
+  Competition,
+  FootTraffic,
+  LocationData,
+  HeatMapDataPoint,
+} from '@/lib/types';
+import { calculateLocationScore, generateAIReasoning, V2ScoringInput } from '@/lib/scoring';
 
-// ─── Keys (server-side only — no NEXT_PUBLIC prefix needed for Census) ──
+// ─── Keys ───────────────────────────────────────────────────────────────────
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 const CENSUS_API_KEY = process.env.CENSUS_API_KEY || '';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────
+// ─── Caches (in-memory, serverless function lifetime) ───────────────────────
+const demographicsCache = new Map<string, Demographics>();
+const placeDetailsCache = new Map<string, PlaceDetails>();
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function deterministicSeed(input: string): number {
   let hash = 0;
@@ -38,7 +49,7 @@ function categoryToPlaceTypes(category: Category): string[] {
   }
 }
 
-// ─── Google APIs ─────────────────────────────────────────────────────────
+// ─── Google APIs ────────────────────────────────────────────────────────────
 
 interface GeoResult { lat: number; lng: number; formattedAddress: string }
 
@@ -59,6 +70,7 @@ async function geocode(query: string): Promise<GeoResult | null> {
 }
 
 interface NearbyPlace {
+  placeId: string;
   name: string;
   address: string;
   lat: number;
@@ -66,6 +78,7 @@ interface NearbyPlace {
   rating?: number;
   userRatingsTotal?: number;
   types: string[];
+  businessStatus?: string;
 }
 
 async function findNearbyPlaces(lat: number, lng: number, category: Category, radius = 3000): Promise<NearbyPlace[]> {
@@ -81,6 +94,7 @@ async function findNearbyPlaces(lat: number, lng: number, category: Category, ra
       if (data.results) {
         for (const place of data.results.slice(0, 8)) {
           allPlaces.push({
+            placeId: place.place_id,
             name: place.name,
             address: place.vicinity || place.formatted_address || place.name,
             lat: place.geometry.location.lat,
@@ -88,6 +102,7 @@ async function findNearbyPlaces(lat: number, lng: number, category: Category, ra
             rating: place.rating,
             userRatingsTotal: place.user_ratings_total,
             types: place.types || [],
+            businessStatus: place.business_status,
           });
         }
       }
@@ -96,9 +111,52 @@ async function findNearbyPlaces(lat: number, lng: number, category: Category, ra
   return allPlaces;
 }
 
-// ─── Census APIs ─────────────────────────────────────────────────────────
+// ─── Google Places Details API ──────────────────────────────────────────────
 
-interface CensusTract { state: string; county: string; tract: string }
+interface PlaceDetails {
+  types: string[];
+  businessStatus?: string;
+  userRatingsTotal?: number;
+  rating?: number;
+  hasOpeningHours: boolean;
+}
+
+async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
+  // Check cache first
+  if (placeDetailsCache.has(placeId)) {
+    return placeDetailsCache.get(placeId)!;
+  }
+
+  try {
+    const fields = 'types,business_status,user_ratings_total,rating,opening_hours';
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${GOOGLE_API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const result = data?.result;
+    if (!result) return null;
+
+    const details: PlaceDetails = {
+      types: result.types || [],
+      businessStatus: result.business_status,
+      userRatingsTotal: result.user_ratings_total,
+      rating: result.rating,
+      hasOpeningHours: !!(result.opening_hours),
+    };
+
+    placeDetailsCache.set(placeId, details);
+    return details;
+  } catch { return null; }
+}
+
+// ─── Census APIs ────────────────────────────────────────────────────────────
+
+interface CensusTract {
+  state: string;
+  county: string;
+  tract: string;
+  areaLandSqMeters?: number;
+}
 
 async function getCensusTract(lat: number, lng: number): Promise<CensusTract | null> {
   try {
@@ -108,7 +166,12 @@ async function getCensusTract(lat: number, lng: number): Promise<CensusTract | n
     const data = await res.json();
     const tract = data?.result?.geographies?.['Census Tracts']?.[0];
     if (!tract) return null;
-    return { state: tract.STATE, county: tract.COUNTY, tract: tract.TRACT };
+    return {
+      state: tract.STATE,
+      county: tract.COUNTY,
+      tract: tract.TRACT,
+      areaLandSqMeters: tract.AREALAND ? parseInt(tract.AREALAND) : undefined,
+    };
   } catch { return null; }
 }
 
@@ -127,51 +190,72 @@ async function fetchDemographics(tract: CensusTract): Promise<Demographics | nul
     const employed = parseInt(v[3]) || 0;
     const laborForce = parseInt(v[4]) || 1;
     const employmentRate = laborForce > 0 ? Math.min(employed / laborForce, 1) : 0.85;
+
+    // Calculate population density (people per square mile)
+    let populationDensity = 5000; // Default: moderate urban
+    if (tract.areaLandSqMeters && tract.areaLandSqMeters > 0) {
+      const areaSqMiles = tract.areaLandSqMeters / 2_589_988;
+      populationDensity = areaSqMiles > 0 ? Math.round(population / areaSqMiles) : 5000;
+    }
+
     return {
       medianIncome: Math.max(medianIncome, 0),
       population,
       medianAge,
       employmentRate: Math.round(employmentRate * 100) / 100,
+      populationDensity,
     };
   } catch { return null; }
 }
 
-// In-memory cache for the lifetime of the serverless function
-const demographicsCache = new Map<string, Demographics>();
-
-async function getDemographicsForLocation(lat: number, lng: number): Promise<Demographics> {
-  const fallback: Demographics = { medianIncome: 55000, population: 10000, medianAge: 35, employmentRate: 0.85 };
+async function getDemographicsForLocation(lat: number, lng: number): Promise<{ demographics: Demographics; hasCensusData: boolean }> {
+  const fallback: Demographics = {
+    medianIncome: 55000,
+    population: 10000,
+    medianAge: 35,
+    employmentRate: 0.85,
+    populationDensity: 5000,
+  };
   const tract = await getCensusTract(lat, lng);
-  if (!tract) return fallback;
+  if (!tract) return { demographics: fallback, hasCensusData: false };
 
   const cacheKey = `${tract.state}-${tract.county}-${tract.tract}`;
-  if (demographicsCache.has(cacheKey)) return demographicsCache.get(cacheKey)!;
+  if (demographicsCache.has(cacheKey)) {
+    return { demographics: demographicsCache.get(cacheKey)!, hasCensusData: true };
+  }
 
   if (CENSUS_API_KEY) {
     const demo = await fetchDemographics(tract);
     if (demo) {
       demographicsCache.set(cacheKey, demo);
-      return demo;
+      return { demographics: demo, hasCensusData: true };
     }
   }
-  return fallback;
+  return { demographics: fallback, hasCensusData: false };
 }
 
-// ─── Scoring helpers ─────────────────────────────────────────────────────
+// ─── V2 Foot Traffic Estimation ─────────────────────────────────────────────
 
-function estimateFootTraffic(place: NearbyPlace, demographics: Demographics): FootTraffic {
-  const seed = deterministicSeed(place.name + place.address);
-  const ratingsProxy = place.userRatingsTotal || 100;
-  const baseScore = Math.min(95, 50 + Math.floor(Math.log(ratingsProxy + 1) * 10));
-  const densityBonus = demographics.population > 15000 ? 5 : demographics.population > 8000 ? 2 : 0;
+function estimateFootTraffic(
+  userRatingsTotal: number,
+  demographics: Demographics,
+  hasOpeningHours: boolean,
+): FootTraffic {
+  const ratingsProxy = userRatingsTotal || 0;
+  // Daily estimate: rough conversion from reviews to daily foot traffic
+  const dailyEstimate = ratingsProxy <= 0
+    ? Math.max(50, Math.round(demographics.population * 0.005))
+    : Math.max(100, Math.round(ratingsProxy * 2.5));
 
   return {
-    score: Math.min(98, baseScore + densityBonus),
+    score: 0, // Will be calculated by V2 scoring engine
     peakHours: ['8am', '12pm', '5pm'],
-    dailyEstimate: Math.max(200, Math.floor(ratingsProxy * 3 + (seed % 300))),
-    proximityToTransit: demographics.population > 12000,
+    dailyEstimate,
+    proximityToTransit: (demographics.populationDensity ?? 0) > 10000,
   };
 }
+
+// ─── V2 Competition Estimation ──────────────────────────────────────────────
 
 function estimateCompetition(allPlaces: NearbyPlace[], currentIndex: number): Competition {
   const count = Math.max(0, allPlaces.length - 1);
@@ -191,10 +275,33 @@ function estimateCompetition(allPlaces: NearbyPlace[], currentIndex: number): Co
     count: Math.min(count, 5),
     nearestDistance: nearestDist === 999 ? 1.5 : Math.round(nearestDist * 10) / 10,
     saturationLevel,
+    placeCountInRadius: allPlaces.length,
   };
 }
 
-// ─── Route Handler ───────────────────────────────────────────────────────
+// ─── Heat Map Data Generation ───────────────────────────────────────────────
+
+function generateHeatMapData(
+  allPlaces: NearbyPlace[],
+  scores: Map<string, number>,
+): HeatMapDataPoint[] {
+  const points: HeatMapDataPoint[] = [];
+
+  // Each place becomes a weighted point
+  for (const place of allPlaces) {
+    const scoreVal = scores.get(place.placeId) || 50;
+    points.push({
+      lat: place.lat,
+      lng: place.lng,
+      weight: Math.max(0.1, scoreVal / 100),
+      placeCount: 1,
+    });
+  }
+
+  return points;
+}
+
+// ─── Route Handler ──────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
@@ -223,24 +330,44 @@ export async function POST(request: NextRequest) {
       centerLng = geo.lng;
     }
 
-    // Step 2: For each category, find real nearby places and enrich
+    // Step 2: For each category, find real nearby places and enrich with V2 scoring
     const results: LocationData[] = [];
+    const allFoundPlaces: NearbyPlace[] = [];
+    const placeScores = new Map<string, number>();
 
     for (const category of categories) {
       const places = await findNearbyPlaces(centerLat, centerLng, category);
 
       if (places.length === 0) {
-        // Return a single area-level result
-        const demographics = await getDemographicsForLocation(centerLat, centerLng);
-        const seed = deterministicSeed(query + category);
+        // Area-level result — V2 scores this LOW with negative signals
+        const { demographics, hasCensusData } = await getDemographicsForLocation(centerLat, centerLng);
+
         const footTraffic: FootTraffic = {
-          score: 65 + (seed % 20),
-          peakHours: ['8am', '12pm', '5pm'],
-          dailyEstimate: 500 + ((seed * 7) % 800),
-          proximityToTransit: demographics.population > 12000,
+          score: 0,
+          peakHours: ['N/A'],
+          dailyEstimate: Math.max(50, Math.round(demographics.population * 0.003)),
+          proximityToTransit: false,
         };
-        const competition: Competition = { count: 0, nearestDistance: 1.5, saturationLevel: 'low' };
-        const score = calculateLocationScore(demographics, competition, footTraffic, category);
+        const competition: Competition = {
+          count: 0,
+          nearestDistance: 0,
+          saturationLevel: 'low',
+          placeCountInRadius: 0,
+        };
+
+        const scoringInput: V2ScoringInput = {
+          demographics,
+          competition,
+          footTraffic,
+          category,
+          placeTypes: [],
+          userRatingsTotal: 0,
+          isAreaLevel: true,
+          hasPlaceDetails: false,
+          hasCensusData,
+        };
+
+        const score = calculateLocationScore(scoringInput);
         const reasoning = generateAIReasoning(score, category);
 
         results.push({
@@ -252,21 +379,56 @@ export async function POST(request: NextRequest) {
           score,
           demographics,
           competition,
-          footTraffic,
+          footTraffic: { ...footTraffic, score: score.footTraffic },
           aiReasoning: reasoning,
+          placeTypes: [],
+          businessStatus: undefined,
+          userRatingsTotal: 0,
         });
         continue;
       }
 
       // Process up to 6 places per category
       const placesToProcess = places.slice(0, 6);
+
+      // Fetch Place Details for all places in parallel (cost: ~$0.02 each)
+      const detailsPromises = placesToProcess.map(p => getPlaceDetails(p.placeId));
+      const allDetails = await Promise.all(detailsPromises);
+
       for (let i = 0; i < placesToProcess.length; i++) {
         const place = placesToProcess[i];
-        const demographics = await getDemographicsForLocation(place.lat, place.lng);
-        const footTraffic = estimateFootTraffic(place, demographics);
+        const details = allDetails[i];
+        allFoundPlaces.push(place);
+
+        const { demographics, hasCensusData } = await getDemographicsForLocation(place.lat, place.lng);
+
+        // Merge Nearby Search + Details data
+        const placeTypes = details?.types || place.types || [];
+        const userRatingsTotal = details?.userRatingsTotal ?? place.userRatingsTotal ?? 0;
+        const businessStatus = details?.businessStatus || place.businessStatus;
+        const hasOpeningHours = details?.hasOpeningHours ?? undefined;
+
+        const footTraffic = estimateFootTraffic(userRatingsTotal, demographics, !!hasOpeningHours);
         const competition = estimateCompetition(placesToProcess, i);
-        const score = calculateLocationScore(demographics, competition, footTraffic, category);
+
+        const scoringInput: V2ScoringInput = {
+          demographics,
+          competition,
+          footTraffic,
+          category,
+          placeTypes,
+          userRatingsTotal,
+          businessStatus,
+          hasOpeningHours,
+          isAreaLevel: false,
+          hasPlaceDetails: !!details,
+          hasCensusData,
+        };
+
+        const score = calculateLocationScore(scoringInput);
         const reasoning = generateAIReasoning(score, category);
+
+        placeScores.set(place.placeId, score.overall);
 
         results.push({
           id: `loc-${Date.now()}-${category}-${i}`,
@@ -277,8 +439,11 @@ export async function POST(request: NextRequest) {
           score,
           demographics,
           competition,
-          footTraffic,
+          footTraffic: { ...footTraffic, score: score.footTraffic },
           aiReasoning: reasoning,
+          placeTypes,
+          businessStatus: businessStatus as LocationData['businessStatus'],
+          userRatingsTotal,
         });
       }
     }
@@ -286,7 +451,14 @@ export async function POST(request: NextRequest) {
     // Sort by overall score descending
     results.sort((a, b) => b.score.overall - a.score.overall);
 
-    return NextResponse.json({ locations: results, center: { lat: centerLat, lng: centerLng } });
+    // Generate heat map data from all found places
+    const heatMapPoints = generateHeatMapData(allFoundPlaces, placeScores);
+
+    return NextResponse.json({
+      locations: results,
+      center: { lat: centerLat, lng: centerLng },
+      heatMapPoints,
+    });
   } catch (error) {
     console.error('Search API error:', error);
     return NextResponse.json({ error: 'Search failed' }, { status: 500 });

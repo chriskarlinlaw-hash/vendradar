@@ -6,19 +6,25 @@
  * returns an error or if no Google key is configured.
  */
 
-import { LocationData, Category } from './types';
+import { LocationData, Category, HeatMapDataPoint } from './types';
 
 // ─── Interface ────────────────────────────────────────────────────────────
 
+export interface SearchResponse {
+  locations: LocationData[];
+  center?: { lat: number; lng: number };
+  heatMapPoints?: HeatMapDataPoint[];
+}
+
 export interface DataProvider {
-  searchLocations(query: string, categories: Category[], lat?: number, lng?: number): Promise<LocationData[]>;
+  searchLocations(query: string, categories: Category[], lat?: number, lng?: number): Promise<SearchResponse>;
   getLocationByAddress(address: string, category: Category): Promise<LocationData | null>;
 }
 
 // ─── Real Data Provider (calls server API route) ──────────────────────────
 
 class RealDataProvider implements DataProvider {
-  async searchLocations(query: string, categories: Category[], lat?: number, lng?: number): Promise<LocationData[]> {
+  async searchLocations(query: string, categories: Category[], lat?: number, lng?: number): Promise<SearchResponse> {
     try {
       const res = await fetch('/api/search', {
         method: 'POST',
@@ -33,29 +39,36 @@ class RealDataProvider implements DataProvider {
       // If the server couldn't geocode, fall back to mock
       if (data.fallback) {
         const { searchLocations: mockSearch } = await import('./mock-data');
-        return mockSearch(query, categories);
+        const locations = await mockSearch(query, categories);
+        return { locations };
       }
 
-      return data.locations as LocationData[];
+      return {
+        locations: data.locations as LocationData[],
+        center: data.center,
+        heatMapPoints: data.heatMapPoints as HeatMapDataPoint[] | undefined,
+      };
     } catch (err) {
       console.error('Search API error, falling back to mock:', err);
       const { searchLocations: mockSearch } = await import('./mock-data');
-      return mockSearch(query, categories);
+      const locations = await mockSearch(query, categories);
+      return { locations };
     }
   }
 
   async getLocationByAddress(address: string, category: Category): Promise<LocationData | null> {
-    const results = await this.searchLocations(address, [category]);
-    return results[0] || null;
+    const result = await this.searchLocations(address, [category]);
+    return result.locations[0] || null;
   }
 }
 
 // ─── Mock Data Provider (no API key) ──────────────────────────────────────
 
 class MockDataProvider implements DataProvider {
-  async searchLocations(query: string, categories: Category[]): Promise<LocationData[]> {
+  async searchLocations(query: string, categories: Category[]): Promise<SearchResponse> {
     const { searchLocations } = await import('./mock-data');
-    return searchLocations(query, categories);
+    const locations = await searchLocations(query, categories);
+    return { locations };
   }
 
   async getLocationByAddress(address: string, category: Category): Promise<LocationData | null> {

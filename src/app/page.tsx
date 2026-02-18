@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Category, LocationData } from '@/lib/types';
+import { useState, useCallback } from 'react';
+import { Category, LocationData, HeatMapDataPoint } from '@/lib/types';
 import { dataProvider } from '@/lib/data-provider';
 import CategorySelector from '@/components/CategorySelector';
 import SearchBar from '@/components/SearchBar';
 import MapView from '@/components/MapView';
 import LocationCard from '@/components/LocationCard';
 import LocationDetail from '@/components/LocationDetail';
-import { MapPin, Sparkles, TrendingUp, Shield } from 'lucide-react';
+import LocationComparison from '@/components/LocationComparison';
+import { MapPin, Sparkles, TrendingUp, Shield, Layers, GitCompare } from 'lucide-react';
 
 export default function Home() {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(['office']);
@@ -17,16 +18,44 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // Heat map state
+  const [showHeatMap, setShowHeatMap] = useState(false);
+  const [heatMapData, setHeatMapData] = useState<HeatMapDataPoint[]>([]);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>();
+
+  // Comparison state
+  const [compareSelection, setCompareSelection] = useState<LocationData[]>([]);
+  const [comparisonPair, setComparisonPair] = useState<[LocationData, LocationData] | null>(null);
+
+  const handleCompareToggle = useCallback((location: LocationData) => {
+    setCompareSelection(prev => {
+      const isAlreadySelected = prev.some(l => l.id === location.id);
+      if (isAlreadySelected) {
+        return prev.filter(l => l.id !== location.id);
+      }
+      const next = [...prev, location];
+      if (next.length === 2) {
+        setComparisonPair([next[0], next[1]]);
+        return [];
+      }
+      return next;
+    });
+  }, []);
+
   const handleSearch = async (query: string, lat?: number, lng?: number) => {
     setIsLoading(true);
     setHasSearched(true);
     setSelectedLocation(null);
+    setCompareSelection([]);
+    setComparisonPair(null);
 
     try {
-      const results = await dataProvider.searchLocations(query, selectedCategories, lat, lng);
-      setLocations(results);
-      if (results.length > 0) {
-        setSelectedLocation(results[0]);
+      const result = await dataProvider.searchLocations(query, selectedCategories, lat, lng);
+      setLocations(result.locations);
+      if (result.center) setMapCenter(result.center);
+      if (result.heatMapPoints) setHeatMapData(result.heatMapPoints);
+      if (result.locations.length > 0) {
+        setSelectedLocation(result.locations[0]);
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -114,12 +143,37 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Map */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" style={{ height: '600px' }}>
-                  <MapView 
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative" style={{ height: '600px' }}>
+                  <MapView
                     locations={locations}
                     selectedLocation={selectedLocation}
                     onSelectLocation={setSelectedLocation}
+                    center={mapCenter}
+                    showHeatMap={showHeatMap}
+                    heatMapData={heatMapData}
                   />
+                  {/* Map controls overlay */}
+                  <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                    {heatMapData.length > 0 && (
+                      <button
+                        onClick={() => setShowHeatMap(!showHeatMap)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium shadow-md transition-colors ${
+                          showHeatMap
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        <Layers size={14} />
+                        Heat Map
+                      </button>
+                    )}
+                    {compareSelection.length === 1 && (
+                      <div className="bg-purple-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-md flex items-center gap-1.5">
+                        <GitCompare size={14} />
+                        Select 2nd location to compare
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -133,11 +187,13 @@ export default function Home() {
                 ) : (
                   <div className="space-y-4">
                     {locations.map((location: LocationData) => (
-                      <LocationCard 
+                      <LocationCard
                         key={location.id}
                         location={location}
                         isSelected={false}
+                        isCompareSelected={compareSelection.some(l => l.id === location.id)}
                         onClick={() => setSelectedLocation(location)}
+                        onCompareToggle={handleCompareToggle}
                       />
                     ))}
                     {locations.length === 0 && !isLoading && (
@@ -150,6 +206,14 @@ export default function Home() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* Comparison Modal */}
+          {comparisonPair && (
+            <LocationComparison
+              locations={comparisonPair}
+              onClose={() => setComparisonPair(null)}
+            />
           )}
 
           {/* Empty State */}

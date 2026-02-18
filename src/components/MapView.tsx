@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { LocationData } from '@/lib/types';
+import { LocationData, HeatMapDataPoint } from '@/lib/types';
 import { getScoreColor } from '@/lib/scoring';
 
 interface MapViewProps {
@@ -9,6 +9,8 @@ interface MapViewProps {
   selectedLocation: LocationData | null;
   onSelectLocation: (location: LocationData) => void;
   center?: { lat: number; lng: number };
+  showHeatMap?: boolean;
+  heatMapData?: HeatMapDataPoint[];
 }
 
 const GOOGLE_MAPS_API_KEY = typeof window !== 'undefined'
@@ -18,11 +20,12 @@ const GOOGLE_MAPS_API_KEY = typeof window !== 'undefined'
 const hasGoogleMapsKey = GOOGLE_MAPS_API_KEY.length > 0 && GOOGLE_MAPS_API_KEY !== 'your_google_maps_api_key_here';
 
 // ─── Google Maps Implementation ───────────────────────────────────────
-function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }: MapViewProps) {
+function GoogleMapView({ locations, selectedLocation, onSelectLocation, center, showHeatMap, heatMapData }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const heatmapLayerRef = useRef<google.maps.visualization.HeatmapLayer | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -41,7 +44,6 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
         setMapLoaded(true);
         clearInterval(interval);
       } else if (attempts > 100) {
-        // ~20 seconds — give up
         setLoadError(true);
         clearInterval(interval);
       }
@@ -119,6 +121,10 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
       // Info window on hover
       marker.addListener('mouseover', () => {
         if (infoWindowRef.current) {
+          const warnings = loc.score.negativeSignals?.length ?? 0;
+          const warningHtml = warnings > 0
+            ? `<div style="font-size: 11px; color: #b91c1c; margin-top: 4px;">⚠ ${warnings} warning${warnings > 1 ? 's' : ''}</div>`
+            : '';
           infoWindowRef.current.setContent(`
             <div style="padding: 8px; max-width: 250px;">
               <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.address}</div>
@@ -126,6 +132,7 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
               <div style="font-size: 12px; color: #666; margin-top: 4px;">
                 Income: $${Math.round(loc.demographics.medianIncome).toLocaleString()} · Traffic: ${Math.round(loc.footTraffic.dailyEstimate).toLocaleString()}/day
               </div>
+              ${warningHtml}
             </div>
           `);
           infoWindowRef.current.open(googleMapRef.current!, marker);
@@ -161,6 +168,42 @@ function GoogleMapView({ locations, selectedLocation, onSelectLocation, center }
       }
     });
   }, [selectedLocation, locations]);
+
+  // Heat map layer
+  useEffect(() => {
+    if (!googleMapRef.current || !mapLoaded) return;
+
+    // Remove existing heat map layer
+    if (heatmapLayerRef.current) {
+      heatmapLayerRef.current.setMap(null);
+      heatmapLayerRef.current = null;
+    }
+
+    if (!showHeatMap || !heatMapData || heatMapData.length === 0) return;
+
+    // Check if visualization library is loaded
+    if (!google.maps.visualization) return;
+
+    const points = heatMapData.map(point => ({
+      location: new google.maps.LatLng(point.lat, point.lng),
+      weight: point.weight,
+    }));
+
+    heatmapLayerRef.current = new google.maps.visualization.HeatmapLayer({
+      data: points,
+      map: googleMapRef.current,
+      radius: 40,
+      opacity: 0.6,
+      gradient: [
+        'rgba(0, 0, 0, 0)',
+        'rgba(239, 68, 68, 0.4)',   // Red (low)
+        'rgba(249, 115, 22, 0.5)',  // Orange
+        'rgba(245, 158, 11, 0.6)',  // Yellow
+        'rgba(34, 197, 94, 0.7)',   // Green (high)
+        'rgba(34, 197, 94, 0.9)',   // Green strong
+      ],
+    });
+  }, [showHeatMap, heatMapData, mapLoaded]);
 
   if (loadError) {
     return <FallbackMapView locations={locations} selectedLocation={selectedLocation} onSelectLocation={onSelectLocation} center={center} />;
@@ -273,10 +316,10 @@ function FallbackMapView({ locations, selectedLocation, onSelectLocation }: MapV
         <div className="text-xs font-medium text-gray-600 mb-2">Location Score</div>
         <div className="space-y-1">
           {[
-            { color: 'bg-green-500', label: '80-100 (Excellent)' },
-            { color: 'bg-yellow-500', label: '60-79 (Good)' },
-            { color: 'bg-orange-500', label: '40-59 (Fair)' },
-            { color: 'bg-red-500', label: '0-39 (Poor)' },
+            { color: 'bg-green-500', label: '75-100 (Excellent)' },
+            { color: 'bg-yellow-500', label: '55-74 (Good)' },
+            { color: 'bg-orange-500', label: '35-54 (Fair)' },
+            { color: 'bg-red-500', label: '0-34 (Poor)' },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
