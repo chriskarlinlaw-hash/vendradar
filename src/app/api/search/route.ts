@@ -36,16 +36,32 @@ function deterministicSeed(input: string): number {
 }
 
 function categoryToPlaceTypes(category: Category): string[] {
+  // Return multiple relevant place types to cast a wider net
   switch (category) {
-    case 'office':        return ['office'];
-    case 'gym':           return ['gym'];
-    case 'hospital':      return ['hospital'];
-    case 'school':        return ['school'];
-    case 'manufacturing': return ['storage'];
-    case 'apartment':     return ['apartment_complex'];
-    case 'hotel':         return ['lodging'];
-    case 'transit':       return ['transit_station'];
+    case 'office':        return ['office', 'accounting', 'insurance_agency', 'real_estate_agency', 'lawyer'];
+    case 'gym':           return ['gym', 'health', 'physiotherapist', 'spa'];
+    case 'hospital':      return ['hospital', 'doctor', 'dentist', 'pharmacy'];
+    case 'school':        return ['school', 'university', 'library', 'secondary_school'];
+    case 'manufacturing': return ['storage', 'moving_company', 'car_repair', 'electrician'];
+    case 'apartment':     return ['real_estate_agency', 'laundry', 'convenience_store'];
+    case 'hotel':         return ['lodging', 'hotel', 'motel'];
+    case 'transit':       return ['transit_station', 'bus_station', 'subway_station', 'train_station'];
     default:              return ['establishment'];
+  }
+}
+
+/** Keyword-based text search types for broader discovery */
+function categoryToKeywords(category: Category): string[] {
+  switch (category) {
+    case 'office':        return ['office building', 'coworking space', 'business center'];
+    case 'gym':           return ['fitness center', 'gym', 'recreation center'];
+    case 'hospital':      return ['hospital', 'medical center', 'clinic'];
+    case 'school':        return ['school', 'college', 'university campus'];
+    case 'manufacturing': return ['warehouse', 'industrial park', 'factory'];
+    case 'apartment':     return ['apartment complex', 'residential building'];
+    case 'hotel':         return ['hotel', 'resort', 'motel'];
+    case 'transit':       return ['train station', 'bus terminal', 'transit hub'];
+    default:              return ['commercial building'];
   }
 }
 
@@ -81,33 +97,70 @@ interface NearbyPlace {
   businessStatus?: string;
 }
 
-async function findNearbyPlaces(lat: number, lng: number, category: Category, radius = 3000): Promise<NearbyPlace[]> {
+async function findNearbyPlaces(lat: number, lng: number, category: Category, radius = 5000): Promise<NearbyPlace[]> {
   const placeTypes = categoryToPlaceTypes(category);
+  const keywords = categoryToKeywords(category);
+  const seen = new Set<string>(); // Dedupe by placeId
   const allPlaces: NearbyPlace[] = [];
 
-  for (const type of placeTypes.slice(0, 1)) {
+  function addPlace(place: NearbyPlace) {
+    if (!seen.has(place.placeId)) {
+      seen.add(place.placeId);
+      allPlaces.push(place);
+    }
+  }
+
+  function parsePlaceResult(r: Record<string, unknown>): NearbyPlace {
+    const geo = r.geometry as { location: { lat: number; lng: number } };
+    return {
+      placeId: r.place_id as string,
+      name: r.name as string,
+      address: (r.vicinity || r.formatted_address || r.name) as string,
+      lat: geo.location.lat,
+      lng: geo.location.lng,
+      rating: r.rating as number | undefined,
+      userRatingsTotal: r.user_ratings_total as number | undefined,
+      types: (r.types as string[]) || [],
+      businessStatus: r.business_status as string | undefined,
+    };
+  }
+
+  // Strategy 1: Nearby Search by type (up to 3 types, all results)
+  const typeSearches = placeTypes.slice(0, 3).map(async (type) => {
     try {
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${GOOGLE_API_KEY}`;
       const res = await fetch(url);
-      if (!res.ok) continue;
+      if (!res.ok) return;
       const data = await res.json();
       if (data.results) {
-        for (const place of data.results.slice(0, 8)) {
-          allPlaces.push({
-            placeId: place.place_id,
-            name: place.name,
-            address: place.vicinity || place.formatted_address || place.name,
-            lat: place.geometry.location.lat,
-            lng: place.geometry.location.lng,
-            rating: place.rating,
-            userRatingsTotal: place.user_ratings_total,
-            types: place.types || [],
-            businessStatus: place.business_status,
-          });
+        for (const r of data.results.slice(0, 20)) {
+          addPlace(parsePlaceResult(r));
         }
       }
-    } catch { continue; }
-  }
+    } catch { /* skip */ }
+  });
+
+  // Strategy 2: Text Search for broader keyword-based discovery (1 keyword)
+  const textSearches = keywords.slice(0, 1).map(async (keyword) => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(keyword)}&location=${lat},${lng}&radius=${radius}&key=${GOOGLE_API_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.results) {
+        for (const r of data.results.slice(0, 20)) {
+          addPlace(parsePlaceResult(r));
+        }
+      }
+    } catch { /* skip */ }
+  });
+
+  // Run all searches in parallel
+  await Promise.all([...typeSearches, ...textSearches]);
+
+  // Sort by rating/popularity so we process the best ones first
+  allPlaces.sort((a, b) => (b.userRatingsTotal || 0) - (a.userRatingsTotal || 0));
+
   return allPlaces;
 }
 
@@ -388,19 +441,25 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Process up to 6 places per category
-      const placesToProcess = places.slice(0, 6);
+      // Process up to 20 places per category
+      const placesToProcess = places.slice(0, 20);
 
-      // Fetch Place Details for all places in parallel (cost: ~$0.02 each)
+      // Fetch Place Details in parallel (batched to avoid rate limits)
       const detailsPromises = placesToProcess.map(p => getPlaceDetails(p.placeId));
       const allDetails = await Promise.all(detailsPromises);
+
+      // Get demographics for search center once (all places are in same general area)
+      const { demographics: areaDemographics, hasCensusData: areaHasCensus } =
+        await getDemographicsForLocation(centerLat, centerLng);
 
       for (let i = 0; i < placesToProcess.length; i++) {
         const place = placesToProcess[i];
         const details = allDetails[i];
         allFoundPlaces.push(place);
 
-        const { demographics, hasCensusData } = await getDemographicsForLocation(place.lat, place.lng);
+        // Use area-level demographics (same census tract for nearby places)
+        const demographics = areaDemographics;
+        const hasCensusData = areaHasCensus;
 
         // Merge Nearby Search + Details data
         const placeTypes = details?.types || place.types || [];
