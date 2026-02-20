@@ -15,6 +15,10 @@ import {
   HeatMapDataPoint,
 } from '@/lib/types';
 import { calculateLocationScore, generateAIReasoning, V2ScoringInput } from '@/lib/scoring';
+import { buildFootTraffic } from '@/lib/foot-traffic-aggregator';
+
+const YELP_API_KEY = process.env.YELP_API_KEY || '';
+void YELP_API_KEY; // consumed by yelp.ts via env directly
 
 // ─── Keys ───────────────────────────────────────────────────────────────────
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -287,25 +291,27 @@ async function getDemographicsForLocation(lat: number, lng: number): Promise<{ d
   return { demographics: fallback, hasCensusData: false };
 }
 
-// ─── V2 Foot Traffic Estimation ─────────────────────────────────────────────
+// ─── Foot Traffic Estimation (aggregator-powered) ────────────────────────────
 
-function estimateFootTraffic(
+async function estimateFootTraffic(
+  placeName: string,
+  lat: number,
+  lng: number,
   userRatingsTotal: number,
   demographics: Demographics,
-  hasOpeningHours: boolean,
-): FootTraffic {
-  const ratingsProxy = userRatingsTotal || 0;
-  // Daily estimate: rough conversion from reviews to daily foot traffic
-  const dailyEstimate = ratingsProxy <= 0
-    ? Math.max(50, Math.round(demographics.population * 0.005))
-    : Math.max(100, Math.round(ratingsProxy * 2.5));
+  category: Category,
+): Promise<FootTraffic> {
+  // censusDensity: derive from populationDensity (already per sq mi from Census)
+  const censusDensity = demographics.populationDensity ?? null;
 
-  return {
-    score: 0, // Will be calculated by V2 scoring engine
-    peakHours: ['8am', '12pm', '5pm'],
-    dailyEstimate,
-    proximityToTransit: (demographics.populationDensity ?? 0) > 10000,
-  };
+  return buildFootTraffic({
+    category,
+    placeName,
+    lat,
+    lng,
+    googleRatingsTotal: userRatingsTotal || undefined,
+    censusDensity: censusDensity ?? undefined,
+  });
 }
 
 // ─── V2 Competition Estimation ──────────────────────────────────────────────
@@ -467,7 +473,7 @@ export async function POST(request: NextRequest) {
         const businessStatus = details?.businessStatus || place.businessStatus;
         const hasOpeningHours = details?.hasOpeningHours ?? undefined;
 
-        const footTraffic = estimateFootTraffic(userRatingsTotal, demographics, !!hasOpeningHours);
+        const footTraffic = await estimateFootTraffic(place.name, place.lat, place.lng, userRatingsTotal, demographics, category);
         const competition = estimateCompetition(placesToProcess, i);
 
         const scoringInput: V2ScoringInput = {

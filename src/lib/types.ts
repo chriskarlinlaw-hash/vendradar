@@ -51,11 +51,43 @@ export interface Competition {
   placeCountInRadius?: number;
 }
 
+export interface FootTrafficSignals {
+  googleRatings: number | null;
+  popularTimes: number[] | null;
+  yelpReviews: number | null;
+  poiDensity: number | null;
+  transit: number | null;
+  buildingSize: number | null;
+  censusDensity: number | null;
+}
+
 export interface FootTraffic {
   score: number;
   peakHours: string[];
   dailyEstimate: number;
   proximityToTransit: boolean;
+  /** Daily visit range string e.g. "800-1,200" */
+  dailyVisitRange?: string;
+  /** Confidence based on available signals (6 active free sources) */
+  confidence?: {
+    level: 'HIGH' | 'MEDIUM' | 'LOW';
+    percentage: number;
+    available: number;
+    total: number;
+    accuracy: string;
+  };
+  /** Normalized signal breakdown */
+  breakdown?: {
+    raw: FootTrafficSignals;
+    normalized: Record<keyof FootTrafficSignals, number>;
+    weights: Record<keyof FootTrafficSignals, number>;
+    weightedScore: number;
+  };
+  /** What's helping/hurting this score */
+  insights?: {
+    helping: string[];
+    hurting: string[];
+  };
 }
 
 export interface LocationScore {
