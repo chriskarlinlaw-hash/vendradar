@@ -145,3 +145,93 @@ export interface HeatMapData {
   center: { lat: number; lng: number };
   category: Category;
 }
+
+export interface PlacementOutcome {
+  id: string;
+  lat: number;
+  lng: number;
+  address: string;
+  category: Category;
+  weeklyRevenue: number;
+  monthsInOperation: number;
+  submittedAt: string;
+  machineCondition?: 'new' | 'good' | 'fair' | 'poor';
+  restockFrequency?: 'daily' | '2-3x_week' | 'weekly' | 'biweekly';
+  productType?: string;
+  vendradarScore?: number;
+  userId?: string;
+}
+
+export interface NearbyMachineInfo {
+  name: string;
+  inferredCategory: 'beverage' | 'snack' | 'healthy' | 'combo' | 'specialty' | 'unknown';
+  brand?: string;
+  distance: number;
+}
+
+export interface CategoryCompetition extends Competition {
+  sameCategoryCount: number;
+  differentCategoryCount: number;
+  categorySaturation: 'underserved' | 'moderate' | 'saturated';
+  nearbyMachineTypes: NearbyMachineInfo[];
+}
+
+export interface TimeWindowConfig {
+  start: number;
+  end: number;
+  label: string;
+}
+
+export interface GoldenHoursConfig {
+  primaryPeak: TimeWindowConfig;
+  secondaryPeak: TimeWindowConfig;
+  deadZones: TimeWindowConfig[];
+  weekendFactor: number;
+}
+
+export interface HourlyBusyness {
+  weekday: number[];
+  weekend: number[];
+}
+
+export interface TimeOfDayScore {
+  goldenHoursScore: number;
+  rawAverage: number;
+  weekendFactor: number;
+  seasonalWarning?: string;
+  hourlyData: HourlyBusyness;
+}
+
+export interface RevenueEstimate {
+  weeklyLow: number;
+  weeklyHigh: number;
+  monthlyMid: number;
+  annualMid: number;
+  basis: string;
+  confidence: 'low' | 'moderate' | 'high';
+  confidenceNote: string;
+}
+
+export interface UserMachine {
+  id: string;
+  userId: string;
+  lat: number;
+  lng: number;
+  address: string;
+  category: Category;
+  status: 'active' | 'inactive' | 'removed';
+  installedAt?: string;
+  notes?: string;
+}
+
+export interface FleetSummary {
+  totalMachines: number;
+  activeMachines: number;
+  categories: Record<Category, number>;
+  bounds?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+}

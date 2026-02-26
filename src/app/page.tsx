@@ -10,9 +10,11 @@ import LocationCard from '@/components/LocationCard';
 import LocationDetail from '@/components/LocationDetail';
 import LocationComparison from '@/components/LocationComparison';
 import { MapPin, Sparkles, TrendingUp, Shield, Layers, GitCompare } from 'lucide-react';
+import ScoutMode from '@/components/ScoutMode';
 
 export default function Home() {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>(['office']);
+  const [activeMode, setActiveMode] = useState<'address' | 'scout'>('address');
   const [locations, setLocations] = useState<LocationData[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -121,126 +123,151 @@ export default function Home() {
       {/* Main App Interface */}
       <section className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Search Section */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <SearchBar 
-              onSearch={handleSearch}
-              isLoading={isLoading}
-              placeholder="Search for a city (e.g., 'San Diego', 'Austin', 'Denver')..."
-            />
+          <div className="max-w-2xl mx-auto mb-6 bg-white rounded-xl border border-gray-200 p-1.5 flex gap-1">
+            <button
+              onClick={() => setActiveMode('address')}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                activeMode === 'address' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Address Search
+            </button>
+            <button
+              onClick={() => setActiveMode('scout')}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                activeMode === 'scout' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Scout Mode
+            </button>
           </div>
 
-          {/* Category Selector */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <CategorySelector 
-              selected={selectedCategories}
-              onSelect={setSelectedCategories}
-            />
-          </div>
+          {activeMode === 'scout' ? (
+            <ScoutMode />
+          ) : (
+            <>
+              {/* Search Section */}
+              <div className="max-w-2xl mx-auto mb-8">
+                <SearchBar
+                  onSearch={handleSearch}
+                  isLoading={isLoading}
+                  placeholder="Search for a city (e.g., 'San Diego', 'Austin', 'Denver')..."
+                />
+              </div>
 
-          {/* Results Section */}
-          {hasSearched && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Map */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative" style={{ height: '600px' }}>
-                  <MapView
-                    locations={locations}
-                    selectedLocation={selectedLocation}
-                    onSelectLocation={setSelectedLocation}
-                    center={mapCenter}
-                    showHeatMap={showHeatMap}
-                    heatMapData={heatMapData}
-                  />
-                  {/* Map controls overlay */}
-                  <div className="absolute bottom-4 right-4 flex gap-2 z-10">
-                    {heatMapData.length > 0 && (
-                      <button
-                        onClick={() => setShowHeatMap(!showHeatMap)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium shadow-md transition-colors ${
-                          showHeatMap
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        <Layers size={14} />
-                        Heat Map
-                      </button>
-                    )}
-                    {compareSelection.length === 1 && (
-                      <div className="bg-purple-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-md flex items-center gap-1.5">
-                        <GitCompare size={14} />
-                        Select 2nd location to compare
+              {/* Category Selector */}
+              <div className="max-w-2xl mx-auto mb-8">
+                <CategorySelector
+                  selected={selectedCategories}
+                  onSelect={setSelectedCategories}
+                />
+              </div>
+
+              {/* Results Section */}
+              {hasSearched && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Map */}
+                  <div className="lg:col-span-2">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative" style={{ height: '600px' }}>
+                      <MapView
+                        locations={locations}
+                        selectedLocation={selectedLocation}
+                        onSelectLocation={setSelectedLocation}
+                        center={mapCenter}
+                        showHeatMap={showHeatMap}
+                        heatMapData={heatMapData}
+                      />
+                      {/* Map controls overlay */}
+                      <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                        {heatMapData.length > 0 && (
+                          <button
+                            onClick={() => setShowHeatMap(!showHeatMap)}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium shadow-md transition-colors ${
+                              showHeatMap
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                            }`}
+                          >
+                            <Layers size={14} />
+                            Heat Map
+                          </button>
+                        )}
+                        {compareSelection.length === 1 && (
+                          <div className="bg-purple-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-md flex items-center gap-1.5">
+                            <GitCompare size={14} />
+                            Select 2nd location to compare
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location List / Detail */}
+                  <div className="space-y-4">
+                    {selectedLocation ? (
+                      <LocationDetail
+                        location={selectedLocation}
+                        onClose={() => setSelectedLocation(null)}
+                      />
+                    ) : (
+                      <div className="space-y-4">
+                        {locations.map((location: LocationData) => (
+                          <LocationCard
+                            key={location.id}
+                            location={location}
+                            isSelected={false}
+                            isCompareSelected={compareSelection.some(l => l.id === location.id)}
+                            onClick={() => setSelectedLocation(location)}
+                            onCompareToggle={handleCompareToggle}
+                          />
+                        ))}
+                        {locations.length === 0 && !isLoading && (
+                          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                            <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500">No locations found. Try a different search.</p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Location List / Detail */}
-              <div className="space-y-4">
-                {selectedLocation ? (
-                  <LocationDetail 
-                    location={selectedLocation}
-                    onClose={() => setSelectedLocation(null)}
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    {locations.map((location: LocationData) => (
-                      <LocationCard
-                        key={location.id}
-                        location={location}
-                        isSelected={false}
-                        isCompareSelected={compareSelection.some(l => l.id === location.id)}
-                        onClick={() => setSelectedLocation(location)}
-                        onCompareToggle={handleCompareToggle}
-                      />
-                    ))}
-                    {locations.length === 0 && !isLoading && (
-                      <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-                        <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500">No locations found. Try a different search.</p>
-                      </div>
-                    )}
+              {/* Comparison Modal */}
+              {comparisonPair && (
+                <LocationComparison
+                  locations={comparisonPair}
+                  onClose={() => setComparisonPair(null)}
+                />
+              )}
+
+              {/* Empty State */}
+              {!hasSearched && (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <MapPin className="w-12 h-12 text-blue-600" />
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to scout locations?</h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    Enter a city above, select your vending category, and discover high-potential locations with AI-powered analysis.
+                  </p>
 
-          {/* Comparison Modal */}
-          {comparisonPair && (
-            <LocationComparison
-              locations={comparisonPair}
-              onClose={() => setComparisonPair(null)}
-            />
-          )}
-
-          {/* Empty State */}
-          {!hasSearched && (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MapPin className="w-12 h-12 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to scout locations?</h3>
-              <p className="text-gray-600 max-w-md mx-auto">
-                Enter a city above, select your vending category, and discover high-potential locations with AI-powered analysis.
-              </p>
-              
-              {/* Demo suggestions */}
-              <div className="mt-8 flex flex-wrap justify-center gap-2">
-                <span className="text-sm text-gray-500 mr-2">Try:</span>
-                {['San Diego', 'Austin', 'Denver', 'Phoenix', 'Nashville', 'Chicago', 'Miami'].map((city) => (
-                  <button
-                    key={city}
-                    onClick={() => handleSearch(city)}
-                    className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
-                  >
-                    {city}
-                  </button>
-                ))}
-              </div>
-            </div>
+                  {/* Demo suggestions */}
+                  <div className="mt-8 flex flex-wrap justify-center gap-2">
+                    <span className="text-sm text-gray-500 mr-2">Try:</span>
+                    {['San Diego', 'Austin', 'Denver', 'Phoenix', 'Nashville', 'Chicago', 'Miami'].map((city) => (
+                      <button
+                        key={city}
+                        onClick={() => handleSearch(city)}
+                        className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

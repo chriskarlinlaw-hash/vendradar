@@ -39,7 +39,7 @@ function deterministicSeed(input: string): number {
   return Math.abs(hash);
 }
 
-function categoryToPlaceTypes(category: Category): string[] {
+export function categoryToPlaceTypes(category: Category): string[] {
   // Return multiple relevant place types to cast a wider net
   switch (category) {
     case 'office':        return ['office', 'accounting', 'insurance_agency', 'real_estate_agency', 'lawyer'];
@@ -55,7 +55,7 @@ function categoryToPlaceTypes(category: Category): string[] {
 }
 
 /** Keyword-based text search types for broader discovery */
-function categoryToKeywords(category: Category): string[] {
+export function categoryToKeywords(category: Category): string[] {
   switch (category) {
     case 'office':        return ['office building', 'coworking space', 'business center'];
     case 'gym':           return ['fitness center', 'gym', 'recreation center'];
@@ -73,7 +73,7 @@ function categoryToKeywords(category: Category): string[] {
 
 interface GeoResult { lat: number; lng: number; formattedAddress: string }
 
-async function geocode(query: string): Promise<GeoResult | null> {
+export async function geocode(query: string): Promise<GeoResult | null> {
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}`;
     const res = await fetch(url);
@@ -101,7 +101,7 @@ interface NearbyPlace {
   businessStatus?: string;
 }
 
-async function findNearbyPlaces(lat: number, lng: number, category: Category, radius = 5000): Promise<NearbyPlace[]> {
+export async function findNearbyPlaces(lat: number, lng: number, category: Category, radius = 5000): Promise<NearbyPlace[]> {
   const placeTypes = categoryToPlaceTypes(category);
   const keywords = categoryToKeywords(category);
   const seen = new Set<string>(); // Dedupe by placeId
@@ -178,7 +178,7 @@ interface PlaceDetails {
   hasOpeningHours: boolean;
 }
 
-async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
+export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
   // Check cache first
   if (placeDetailsCache.has(placeId)) {
     return placeDetailsCache.get(placeId)!;
@@ -265,7 +265,7 @@ async function fetchDemographics(tract: CensusTract): Promise<Demographics | nul
   } catch { return null; }
 }
 
-async function getDemographicsForLocation(lat: number, lng: number): Promise<{ demographics: Demographics; hasCensusData: boolean }> {
+export async function getDemographicsForLocation(lat: number, lng: number): Promise<{ demographics: Demographics; hasCensusData: boolean }> {
   const fallback: Demographics = {
     medianIncome: 55000,
     population: 10000,
@@ -316,7 +316,7 @@ async function estimateFootTraffic(
 
 // ─── V2 Competition Estimation ──────────────────────────────────────────────
 
-function estimateCompetition(allPlaces: NearbyPlace[], currentIndex: number): Competition {
+export function estimateCompetition(allPlaces: NearbyPlace[], currentIndex: number): Competition {
   const count = Math.max(0, allPlaces.length - 1);
   const saturationLevel: 'low' | 'medium' | 'high' = count <= 2 ? 'low' : count <= 5 ? 'medium' : 'high';
 

@@ -164,17 +164,21 @@ export async function buildFootTraffic(input: BuildFootTrafficInput): Promise<Fo
     getOSMSignals(input.lat, input.lng),
   ]);
 
-  const popularTimes = popularTimesRes.status === 'fulfilled' ? popularTimesRes.value.busyness : null;
-  const yelp = yelpRes.status === 'fulfilled' ? yelpRes.value : null;
-  const osm = osmRes.status === 'fulfilled' ? osmRes.value : null;
+  const popularTimesData = popularTimesRes.status === 'fulfilled'
+    ? popularTimesRes.value
+    : { busynessHours: null, peakHours: [] };
+  const yelp = yelpRes.status === 'fulfilled' ? yelpRes.value : { reviewCount: null };
+  const osm = osmRes.status === 'fulfilled'
+    ? osmRes.value
+    : { poiCount: null, transitDistanceMiles: null, buildingSqft: null };
 
   const rawSignals: FootTrafficSignals = {
     googleRatings: input.googleRatingsTotal ?? null,
-    popularTimes,
-    yelpReviews: yelp?.reviewCount ?? null,
-    poiDensity: osm?.poiCount ?? null,
-    transit: osm?.nearestTransitDistanceMiles ?? null,
-    buildingSize: osm?.buildingSqft ?? null,
+    popularTimes: popularTimesData.busynessHours,
+    yelpReviews: yelp.reviewCount,
+    poiDensity: osm.poiCount,
+    transit: osm.transitDistanceMiles,
+    buildingSize: osm.buildingSqft,
     censusDensity: input.censusDensity ?? null,
   };
 
@@ -225,7 +229,7 @@ export async function buildFootTraffic(input: BuildFootTrafficInput): Promise<Fo
 
   return {
     score: Math.round(score),
-    peakHours: extractPeakHours(popularTimes),
+    peakHours: popularTimesData.peakHours.length > 0 ? popularTimesData.peakHours : extractPeakHours(popularTimesData.busynessHours),
     dailyEstimate: estimate,
     proximityToTransit: normalized.transit >= 50,
     dailyVisitRange: `${lowerBound.toLocaleString()}-${upperBound.toLocaleString()}`,

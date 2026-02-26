@@ -2,137 +2,129 @@ import { getCached, setCached } from '@/lib/simple-cache';
 
 export interface OSMSignals {
   poiCount: number | null;
-  nearestTransitDistanceMiles: number | null;
+  transitDistanceMiles: number | null;
   buildingSqft: number | null;
 }
 
-const OSM_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
-let nextOverpassRequestAt = 0;
+const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function metersToMiles(meters: number): number {
-  return meters / 1609.34;
+function sqMetersToSqft(v: number): number {
+  return v * 10.7639;
 }
 
-function squareMetersToSqft(m2: number): number {
-  return m2 * 10.7639;
+function haversineMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 3958.8;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function respectOverpassRateLimit(): Promise<void> {
-  const now = Date.now();
-  const waitMs = nextOverpassRequestAt - now;
-  if (waitMs > 0) {
-    await new Promise(resolve => setTimeout(resolve, waitMs));
-  }
-  nextOverpassRequestAt = Date.now() + 1000;
-}
-
-function parseFirstAreaM2(geometry: Array<{ lat: number; lon: number }>): number {
+function polygonAreaSqMeters(geometry: Array<{ lat: number; lon: number }>): number {
   if (geometry.length < 3) return 0;
-  // Shoelace approximation in local meters.
   const lat0 = geometry[0].lat;
   const lon0 = geometry[0].lon;
-  const points = geometry.map(p => {
-    const x = (p.lon - lon0) * 111320 * Math.cos((lat0 * Math.PI) / 180);
-    const y = (p.lat - lat0) * 110540;
-    return { x, y };
-  });
+  const points = geometry.map(p => ({
+    x: (p.lon - lon0) * 111320 * Math.cos((lat0 * Math.PI) / 180),
+    y: (p.lat - lat0) * 110540,
+  }));
 
-  let area = 0;
+  let sum = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
-    area += points[i].x * points[j].y - points[j].x * points[i].y;
+    sum += points[i].x * points[j].y - points[j].x * points[i].y;
   }
-  return Math.abs(area / 2);
+  return Math.abs(sum / 2);
 }
 
-export async function getOSMSignals(lat: number, lng: number): Promise<OSMSignals | null> {
-  const cacheKey = `osm:${lat.toFixed(4)}:${lng.toFixed(4)}`;
-  const cached = await getCached<OSMSignals>(cacheKey);
+async function runOverpass(query: string): Promise<Array<Record<string, unknown>>> {
+  const res = await fetch(OVERPASS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `data=${encodeURIComponent(query)}`,
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!res.ok) return [];
+  const data = (await res.json()) as { elements?: Array<Record<string, unknown>> };
+  return data.elements ?? [];
+}
+
+export async function getOSMSignals(lat: number, lng: number): Promise<OSMSignals> {
+  const key = `osm:${lat.toFixed(5)},${lng.toFixed(5)}`;
+  const cached = await getCached<OSMSignals>(key);
   if (cached) return cached;
 
-  const query = `
+  const poiQuery = `
 [out:json][timeout:8];
 (
-  node(around:800,${lat},${lng})[amenity];
-  way(around:800,${lat},${lng})[amenity];
-  relation(around:800,${lat},${lng})[amenity];
+  node(around:500,${lat},${lng})[amenity];
+  node(around:500,${lat},${lng})[shop];
+  node(around:500,${lat},${lng})[leisure];
+  way(around:500,${lat},${lng})[amenity];
+  way(around:500,${lat},${lng})[shop];
+  way(around:500,${lat},${lng})[leisure];
+  relation(around:500,${lat},${lng})[amenity];
+  relation(around:500,${lat},${lng})[shop];
+  relation(around:500,${lat},${lng})[leisure];
 );
-out center;
+out ids;
+`;
+
+  const transitQuery = `
+[out:json][timeout:8];
 (
-  node(around:2000,${lat},${lng})[public_transport];
-  node(around:2000,${lat},${lng})[highway=bus_stop];
-  node(around:2000,${lat},${lng})[railway=station];
+  node(around:1609,${lat},${lng})[highway=bus_stop];
+  node(around:1609,${lat},${lng})[railway=tram_stop];
+  node(around:1609,${lat},${lng})[railway=subway_entrance];
+  node(around:1609,${lat},${lng})[railway=station];
+  way(around:1609,${lat},${lng})[railway=station];
 );
 out center;
+`;
+
+  const buildingQuery = `
+[out:json][timeout:8];
 way(around:100,${lat},${lng})[building];
 out geom 1;
 `;
 
   try {
-    await respectOverpassRateLimit();
+    const [poiElements, transitElements, buildingElements] = await Promise.all([
+      runOverpass(poiQuery),
+      runOverpass(transitQuery),
+      runOverpass(buildingQuery),
+    ]);
 
-    const res = await fetch(OVERPASS_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'VendRadar/1.0',
-      },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(6000),
-    });
+    const poiCount = poiElements.length;
 
-    if (!res.ok) return null;
-
-    const data = (await res.json()) as {
-      elements?: Array<{
-        type: string;
-        lat?: number;
-        lon?: number;
-        center?: { lat: number; lon: number };
-        tags?: Record<string, string>;
-        geometry?: Array<{ lat: number; lon: number }>;
-      }>;
-    };
-
-    const elements = data.elements ?? [];
-
-    const poiElements = elements.filter(e => e.tags?.amenity);
-    const transitElements = elements.filter(
-      e => e.tags?.public_transport || e.tags?.highway === 'bus_stop' || e.tags?.railway === 'station'
-    );
-    const building = elements.find(e => e.tags?.building && Array.isArray(e.geometry));
-
-    let nearestTransitDistanceMiles: number | null = null;
-    for (const t of transitElements) {
-      const tLat = t.lat ?? t.center?.lat;
-      const tLng = t.lon ?? t.center?.lon;
-      if (typeof tLat !== 'number' || typeof tLng !== 'number') continue;
-      const dLat = (tLat - lat) * 69;
-      const dLng = (tLng - lng) * 54.6;
-      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (nearestTransitDistanceMiles === null || dist < nearestTransitDistanceMiles) {
-        nearestTransitDistanceMiles = dist;
-      }
+    let transitDistanceMiles: number | null = null;
+    for (const e of transitElements) {
+      const eLat = typeof e.lat === 'number' ? e.lat : (e.center as { lat?: number } | undefined)?.lat;
+      const eLng = typeof e.lon === 'number' ? e.lon : (e.center as { lon?: number } | undefined)?.lon;
+      if (typeof eLat !== 'number' || typeof eLng !== 'number') continue;
+      const miles = haversineMiles(lat, lng, eLat, eLng);
+      if (transitDistanceMiles === null || miles < transitDistanceMiles) transitDistanceMiles = miles;
     }
 
     let buildingSqft: number | null = null;
-    if (building?.geometry && building.geometry.length >= 3) {
-      const areaM2 = parseFirstAreaM2(building.geometry);
-      if (areaM2 > 0) {
-        buildingSqft = squareMetersToSqft(areaM2);
-      }
+    const way = buildingElements.find(e => Array.isArray(e.geometry));
+    if (way?.geometry) {
+      const area = polygonAreaSqMeters(way.geometry as Array<{ lat: number; lon: number }>);
+      if (area > 0) buildingSqft = sqMetersToSqft(area);
     }
 
     const result: OSMSignals = {
-      poiCount: poiElements.length,
-      nearestTransitDistanceMiles,
+      poiCount: Number.isFinite(poiCount) ? poiCount : null,
+      transitDistanceMiles,
       buildingSqft,
     };
 
-    await setCached(cacheKey, result, OSM_TTL_MS);
+    await setCached(key, result, TTL_MS);
     return result;
   } catch {
-    return null;
+    return { poiCount: null, transitDistanceMiles: null, buildingSqft: null };
   }
 }
